@@ -1,54 +1,38 @@
 package app
 
 import (
+	"context"
 	"net/http"
 
-	"github.com/dd3v/snippets.page.backend/app/endpoint"
-	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
+	storage "github.com/dd3v/snippets.page.backend/app/storage/mongo"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-//App default app struct
-type App struct {
-	config *Config
-	logger *logrus.Logger
-	router *mux.Router
-}
-
-//NewApp create new app instance
-func NewApp(config *Config) *App {
-	return &App{
-		config: config,
-		logger: logrus.New(),
-		router: mux.NewRouter(),
-	}
-}
-
-//Run - application configuration and launch
-func (app *App) Run() error {
-	if err := app.setLogLevel(); err != nil {
-		return err
-	}
-	app.setRouter()
-	app.logger.Info("server is started...")
-
-	if err := http.ListenAndServe(app.config.BindAddr, app.router); err != nil {
-		app.logger.Error(err)
-	}
-
-	return nil
-}
-
-func (app *App) setRouter() {
-	app.router.HandleFunc("/", endpoint.StaticEndpoint)
-}
-
-func (app *App) setLogLevel() error {
-	level, err := logrus.ParseLevel(app.config.LogLevel)
+//New - init database connection, set up base configuration and return HTTP server
+func New(config *Config) error {
+	db, err := newDB(config.DatabaseURL)
 	if err != nil {
 		return err
 	}
-	app.logger.SetLevel(level)
+	storage := storage.New(db)
+	server := newServer(storage)
+	return http.ListenAndServe(config.BindAddr, server)
+}
 
-	return nil
+func newDB(databaseURL string) (*mongo.Client, error) {
+	client, err := mongo.NewClient(options.Client().ApplyURI(databaseURL))
+	if err != nil {
+		return nil, err
+	}
+	err = client.Connect(context.TODO())
+	if err != nil {
+		return nil, err
+	}
+	err = client.Ping(context.TODO(), readpref.Primary())
+	if err != nil {
+		return nil, err
+	}
+	return client, nil
 }

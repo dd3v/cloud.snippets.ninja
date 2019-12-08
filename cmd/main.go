@@ -23,8 +23,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	app := app.NewApp(config)
-	if err := app.Run(); err != nil {
+	if err := app.New(config); err != nil {
 		log.Fatal(err)
 	}
 }
