@@ -1,4 +1,4 @@
-package app
+package config
 
 //Config basic data structure for application configuration
 type Config struct {
@@ -11,7 +11,7 @@ type Config struct {
 //NewConfig creates config structure and fills values by default
 func NewConfig() *Config {
 	return &Config{
-		BindAddr: ":8080",
+		BindAddr: "8080",
 		LogLevel: "debug",
 	}
 }
