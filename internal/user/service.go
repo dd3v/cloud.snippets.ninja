@@ -1,8 +1,19 @@
 package user
 
-type userService struct {
+type Service interface {
 }
 
-func NewService() *userService {
-	return &userService{}
+type service struct {
+	repository Repository
+}
+
+//NewService - ...
+func NewService(repository Repository) Service {
+	return &service{
+		repository: repository,
+	}
+}
+
+func (s *service) GetAll() {
+
 }

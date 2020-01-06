@@ -6,14 +6,17 @@ import (
 	"net/http"
 )
 
-type userHandler struct {
+type handler struct {
+	service Service
 }
 
-func NewHTTPHandler() *userHandler {
-	return &userHandler{}
+func NewHTTPHandler(service Service) *handler {
+	return &handler{
+		service: service,
+	}
 }
 
-func (h *userHandler) Me(w http.ResponseWriter, r *http.Request) {
+func (h *handler) Me(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(r.Header); err != nil {
 		fmt.Println(err)
 	}
