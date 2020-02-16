@@ -2,45 +2,47 @@ package user
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
+
+	routing "github.com/go-ozzo/ozzo-routing"
 )
 
-type handler struct {
+type resource struct {
 	service Service
 }
 
-func NewHTTPHandler(service Service) *handler {
-	return &handler{
+func NewHTTPHandler(router *routing.RouteGroup, service Service) {
+	res := resource{
 		service: service,
 	}
+	router.Get("/me", res.me)
+	router.Get("/users/<id>", res.view)
+	router.Post("/users", res.create)
 }
 
-func (h handler) Me(w http.ResponseWriter, r *http.Request) {
-	if err := json.NewEncoder(w).Encode(r.Header); err != nil {
-		fmt.Println(err)
-	}
+func (r resource) me(c *routing.Context) error {
+	return nil
 }
 
-func (h handler) View(w http.ResponseWriter, r *http.Request) {
-
+func (r resource) view(c *routing.Context) error {
+	return nil
 }
 
-func (h handler) Create(w http.ResponseWriter, r *http.Request) {
+func (r resource) create(c *routing.Context) error {
 	var request CreateRequest
-	err := json.NewDecoder(r.Body).Decode(&request)
+	err := c.Read(&request)
 	if err != nil {
 
 	}
 	err = request.Validate()
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		return err
 	}
 
-	q, _ := h.service.CreateUser(context.TODO(), request)
+	q, _ := r.service.CreateUser(context.TODO(), request)
 
 	fmt.Println(q)
 	fmt.Printf("%v", request)
 
+	return nil
 }

@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	"github.com/gorilla/mux"
+	routing "github.com/go-ozzo/ozzo-routing"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -37,16 +37,15 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	router := mux.NewRouter().StrictSlash(true)
-	v1 := router.PathPrefix("/v1").Subrouter()
+
+	fmt.Println(db)
+
+	router := routing.New()
+	apiGroup := router.Group("/api")
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
-	userHandler := user.NewHTTPHandler(userService)
-
-	v1.HandleFunc("/me", userHandler.Me).Methods(http.MethodGet)
-	v1.HandleFunc("/users", userHandler.Create).Methods(http.MethodPost)
-	v1.HandleFunc("/users/{id:[0-9a-zA-Z]+}", userHandler.View).Methods(http.MethodGet)
+	user.NewHTTPHandler(apiGroup.Group("/v1"), userService)
 
 	address := fmt.Sprintf(":%v", config.BindAddr)
 	httpServer := &http.Server{
