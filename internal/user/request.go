@@ -15,6 +15,10 @@ type CreateRequest struct {
 	RepeatPassword string `json:"repeat_password"`
 }
 
+type UpdateRequest struct {
+	Website string `json:"website"`
+}
+
 func stringEquals(str string) validation.RuleFunc {
 	return func(value interface{}) error {
 		s, _ := value.(string)

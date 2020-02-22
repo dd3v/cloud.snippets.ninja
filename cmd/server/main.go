@@ -9,7 +9,9 @@ import (
 	"os"
 
 	"github.com/BurntSushi/toml"
-	routing "github.com/go-ozzo/ozzo-routing"
+	routing "github.com/go-ozzo/ozzo-routing/v2"
+	"github.com/go-ozzo/ozzo-routing/v2/content"
+
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -41,6 +43,9 @@ func main() {
 	fmt.Println(db)
 
 	router := routing.New()
+	router.Use(
+		content.TypeNegotiator(content.JSON),
+	)
 	apiGroup := router.Group("/api")
 
 	userRepository := user.NewRepository(db)

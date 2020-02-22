@@ -2,47 +2,80 @@ package user
 
 import (
 	"context"
-	"fmt"
 
-	routing "github.com/go-ozzo/ozzo-routing"
+	routing "github.com/go-ozzo/ozzo-routing/v2"
 )
 
 type resource struct {
 	service Service
 }
 
+//NewHTTPHandler -
 func NewHTTPHandler(router *routing.RouteGroup, service Service) {
-	res := resource{
+	r := resource{
 		service: service,
 	}
-	router.Get("/me", res.me)
-	router.Get("/users/<id>", res.view)
-	router.Post("/users", res.create)
+	router.Get("/users", r.list)
+	router.Get("/users/<id>", r.get)
+	router.Post("/users", r.create)
+	router.Put("/users/<id>", r.update)
+	router.Delete("/users/<id>", r.delete)
 }
 
-func (r resource) me(c *routing.Context) error {
-	return nil
+func (r resource) list(c *routing.Context) error {
+	filter := map[string]interface{}{}
+	users, err := r.service.Find(context.TODO(), filter)
+	if err != nil {
+		return err
+	}
+	return c.Write(users)
 }
 
-func (r resource) view(c *routing.Context) error {
-	return nil
+func (r resource) get(c *routing.Context) error {
+	id := c.Param("id")
+	user, err := r.service.FindByID(context.TODO(), id)
+	if err != nil {
+		return err
+	}
+	return c.Write(user)
 }
 
 func (r resource) create(c *routing.Context) error {
 	var request CreateRequest
-	err := c.Read(&request)
-	if err != nil {
-
+	if err := c.Read(&request); err != nil {
+		return err
 	}
-	err = request.Validate()
+	err := request.Validate()
 	if err != nil {
 		return err
 	}
 
-	q, _ := r.service.CreateUser(context.TODO(), request)
+	user, err := r.service.Create(context.TODO(), request)
+	if err != nil {
+		return err
+	}
+	return c.Write(user)
+}
 
-	fmt.Println(q)
-	fmt.Printf("%v", request)
+func (r resource) update(c *routing.Context) error {
+	id := c.Param("id")
+	var request UpdateRequest
+	if err := c.Read(&request); err != nil {
+		return err
+	}
+	user, err := r.service.Update(context.TODO(), id, request)
+	if err != nil {
+		return err
+	}
+	return c.Write(user)
+}
 
-	return nil
+func (r resource) delete(c *routing.Context) error {
+	id := c.Param("id")
+
+	if err := r.service.Delete(context.TODO(), id); err != nil {
+		return err
+	}
+
+	return c.Write(nil)
 }
