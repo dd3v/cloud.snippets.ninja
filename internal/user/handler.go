@@ -49,7 +49,6 @@ func (r resource) create(c *routing.Context) error {
 	if err != nil {
 		return err
 	}
-
 	user, err := r.service.Create(context.TODO(), request)
 	if err != nil {
 		return err
@@ -61,6 +60,10 @@ func (r resource) update(c *routing.Context) error {
 	id := c.Param("id")
 	var request UpdateRequest
 	if err := c.Read(&request); err != nil {
+		return err
+	}
+	err := request.Validate()
+	if err != nil {
 		return err
 	}
 	user, err := r.service.Update(context.TODO(), id, request)

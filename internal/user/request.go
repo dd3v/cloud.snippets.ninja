@@ -15,10 +15,6 @@ type CreateRequest struct {
 	RepeatPassword string `json:"repeat_password"`
 }
 
-type UpdateRequest struct {
-	Website string `json:"website"`
-}
-
 func stringEquals(str string) validation.RuleFunc {
 	return func(value interface{}) error {
 		s, _ := value.(string)
@@ -37,5 +33,17 @@ func (r CreateRequest) Validate() error {
 		validation.Field(&r.Password, validation.Required, validation.Length(6, 50)),
 		validation.Field(&r.RepeatPassword, validation.Required, validation.Length(6, 50)),
 		validation.Field(&r.Password, validation.By(stringEquals(r.RepeatPassword))),
+	)
+}
+
+//UpdateRequest - ...
+type UpdateRequest struct {
+	Website string `json:"website"`
+}
+
+//Validate - ...
+func (u UpdateRequest) Validate() error {
+	return validation.ValidateStruct(&u,
+		validation.Field(&u.Website, validation.Length(5, 100), is.URL),
 	)
 }
