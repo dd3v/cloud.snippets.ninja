@@ -60,7 +60,6 @@ func TestCreateRequestValidation(t *testing.T) {
 			assert.Equal(t, tt.fail, err != nil)
 		})
 	}
-
 }
 
 func TestUpdateRequestValidation(t *testing.T) {
@@ -98,5 +97,4 @@ func TestUpdateRequestValidation(t *testing.T) {
 			assert.Equal(t, tt.fail, err != nil)
 		})
 	}
-
 }
