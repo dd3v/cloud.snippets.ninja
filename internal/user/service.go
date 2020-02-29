@@ -23,14 +23,6 @@ type service struct {
 	repository Repository
 }
 
-func generatePasswortHash(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hash[:]), err
-}
-
 //NewService - ...
 func NewService(repository Repository) Service {
 	return &service{
@@ -47,14 +39,19 @@ func (s service) FindByID(context context.Context, id string) (entity.User, erro
 }
 
 func (s service) Create(context context.Context, request CreateRequest) (entity.User, error) {
-	user := entity.User{
-		ID:        primitive.NewObjectID(),
-		Login:     request.Login,
-		Email:     request.Email,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	passwordHash, err := s.generatePasswortHash(request.Password)
+	if err != nil {
+		return entity.User{}, err
 	}
-	err := s.repository.Create(context, user)
+	user := entity.User{
+		ID:           primitive.NewObjectID(),
+		Login:        request.Login,
+		Email:        request.Email,
+		PasswordHash: passwordHash,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	}
+	err = s.repository.Create(context, user)
 	return user, err
 }
 
@@ -78,4 +75,12 @@ func (s service) Delete(context context.Context, id string) error {
 
 func (s service) Count(context context.Context) (int, error) {
 	return s.repository.Count(context)
+}
+
+func (s service) generatePasswortHash(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash[:]), err
 }
