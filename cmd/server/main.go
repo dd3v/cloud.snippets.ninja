@@ -17,6 +17,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 
+	"github.com/dd3v/snippets.page.backend/internal/auth"
 	"github.com/dd3v/snippets.page.backend/internal/config"
 	"github.com/dd3v/snippets.page.backend/internal/user"
 )
@@ -52,6 +53,8 @@ func main() {
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 	user.NewHTTPHandler(apiGroup.Group("/v1"), userService)
+
+	auth.NewHTTPHandler(apiGroup.Group("/v1"), auth.NewService())
 
 	address := fmt.Sprintf(":%v", config.BindAddr)
 	httpServer := &http.Server{
