@@ -2,10 +2,12 @@ package test
 
 import (
 	"context"
+	"log"
 	"testing"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dd3v/snippets.page.backend/internal/config"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -40,6 +42,31 @@ func Database(t *testing.T) *mongo.Database {
 	}
 	database := client.Database(config.TestDatabaseName)
 	database.Drop(context.TODO())
+
+	_, err = client.Database("snippets_test").Collection("users").Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.M{
+				"email": 1,
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = client.Database("snippets_test").Collection("users").Indexes().CreateOne(
+		context.Background(),
+		mongo.IndexModel{
+			Keys: bson.M{
+				"login": 1,
+			},
+			Options: options.Index().SetUnique(true),
+		},
+	)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return database
 }
