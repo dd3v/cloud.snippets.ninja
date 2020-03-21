@@ -7,6 +7,7 @@ type Config struct {
 	DatabaseURL      string `toml:"database_url"`
 	DatabaseName     string `toml:"database_name"`
 	TestDatabaseName string `toml:"test_database_name"`
+	JWTSigningKey    string `toml:"jwt_signing_key"`
 }
 
 //NewConfig creates config structure and fills values by default

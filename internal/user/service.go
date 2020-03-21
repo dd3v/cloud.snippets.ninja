@@ -5,8 +5,9 @@ import (
 	"time"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
+	"github.com/dd3v/snippets.page.backend/pkg/security"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/crypto/bcrypt"
 )
 
 //Service - ...
@@ -39,17 +40,18 @@ func (s service) FindByID(context context.Context, id string) (entity.User, erro
 }
 
 func (s service) Create(context context.Context, request CreateRequest) (entity.User, error) {
-	passwordHash, err := s.generatePasswortHash(request.Password)
+	passwordHash, err := security.GenerateHashFromPassword(request.Password)
 	if err != nil {
 		return entity.User{}, err
 	}
 	user := entity.User{
-		ID:           primitive.NewObjectID(),
-		Login:        request.Login,
-		Email:        request.Email,
-		PasswordHash: passwordHash,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		ID:            primitive.NewObjectID(),
+		Login:         request.Login,
+		Email:         request.Email,
+		PasswordHash:  passwordHash,
+		RefreshTokens: make([]entity.RefreshTokens, 0),
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
 	}
 	err = s.repository.Create(context, user)
 	return user, err
@@ -75,12 +77,4 @@ func (s service) Delete(context context.Context, id string) error {
 
 func (s service) Count(context context.Context) (int, error) {
 	return s.repository.Count(context)
-}
-
-func (s service) generatePasswortHash(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hash[:]), err
 }
