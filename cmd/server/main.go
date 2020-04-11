@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -12,14 +11,12 @@ import (
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/go-ozzo/ozzo-routing/v2/content"
 
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
-
 	"github.com/dd3v/snippets.page.backend/internal/auth"
 	"github.com/dd3v/snippets.page.backend/internal/config"
 	"github.com/dd3v/snippets.page.backend/internal/user"
+	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
+	dbx "github.com/go-ozzo/ozzo-dbx"
+	_ "github.com/lib/pq"
 )
 
 var (
@@ -37,12 +34,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db, err := newDB(config.DatabaseURL)
+	pgsql, err := dbx.MustOpen("postgres", config.DatabaseDNS)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("postgres connection error: %s", err)
 	}
+	defer func() {
+		if err := pgsql.Close(); err != nil {
+			fmt.Printf("postgres runtime error: %s", err)
+		}
+	}()
 
-	fmt.Println(db)
+	db := dbcontext.New(pgsql)
 
 	router := routing.New()
 	router.Use(
@@ -62,49 +64,8 @@ func main() {
 		Handler: router,
 	}
 	if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-		fmt.Println(err)
+		fmt.Printf("http server error: %s", err)
 		os.Exit(-1)
 	}
 
-}
-
-func newDB(databaseURL string) (*mongo.Database, error) {
-	client, err := mongo.NewClient(options.Client().ApplyURI(databaseURL))
-	if err != nil {
-		return nil, err
-	}
-	err = client.Connect(context.TODO())
-	if err != nil {
-		return nil, err
-	}
-	err = client.Ping(context.TODO(), readpref.Primary())
-	if err != nil {
-		return nil, err
-	}
-	_, err = client.Database("snippets").Collection("users").Indexes().CreateOne(
-		context.Background(),
-		mongo.IndexModel{
-			Keys: bson.M{
-				"email": 1,
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-	_, err = client.Database("snippets").Collection("users").Indexes().CreateOne(
-		context.Background(),
-		mongo.IndexModel{
-			Keys: bson.M{
-				"login": 1,
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return client.Database("snippets"), nil
 }

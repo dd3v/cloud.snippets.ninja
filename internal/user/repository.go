@@ -4,85 +4,54 @@ import (
 	"context"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
 )
-
-const collection = "users"
 
 //Repository - ...
 type Repository interface {
-	FindByID(context context.Context, id string) (entity.User, error)
-	Find(context context.Context, filter map[string]interface{}) ([]entity.User, error)
-	Create(context context.Context, user entity.User) error
+	FindByID(context context.Context, id int) (entity.User, error)
+	Create(context context.Context, user entity.User) (entity.User, error)
 	Update(context context.Context, user entity.User) error
-	Delete(context context.Context, id string) error
+	Delete(context context.Context, id int) error
 	Count(context context.Context) (int, error)
 }
 
 type repository struct {
-	db *mongo.Database
+	db *dbcontext.DB
 }
 
 //NewRepository - ...
-func NewRepository(db *mongo.Database) Repository {
+func NewRepository(db *dbcontext.DB) Repository {
 	return &repository{
 		db: db,
 	}
 }
 
-func (r *repository) Find(context context.Context, filter map[string]interface{}) ([]entity.User, error) {
-	var users []entity.User
-	filterCursor, err := r.db.Collection(collection).Find(context, filter)
-	err = filterCursor.All(context, &users)
-
-	return users, err
-}
-
-func (r *repository) FindByID(context context.Context, id string) (entity.User, error) {
+func (r repository) FindByID(context context.Context, id int) (entity.User, error) {
 	var user entity.User
-	objectID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return user, err
-	}
-	err = r.db.Collection(collection).FindOne(context, bson.M{"_id": objectID}).Decode(&user)
-
+	err := r.db.With(context).Select().Model(id, &user)
 	return user, err
 }
 
-func (r *repository) Create(context context.Context, user entity.User) error {
-	if _, err := r.db.Collection(collection).InsertOne(context, user); err != nil {
-		return err
-	}
-
-	return nil
+func (r repository) Create(context context.Context, user entity.User) (entity.User, error) {
+	err := r.db.With(context).Model(&user).Insert()
+	return user, err
 }
 
-func (r *repository) Update(context context.Context, user entity.User) error {
-	filter := bson.M{"_id": user.ID}
-	update := bson.M{"$set": user}
-	if _, err := r.db.Collection(collection).UpdateOne(context, filter, update); err != nil {
-		return err
-	}
-
-	return nil
+func (r repository) Update(context context.Context, user entity.User) error {
+	return r.db.With(context).Model(&user).Update()
 }
 
-func (r *repository) Delete(context context.Context, id string) error {
-	objectID, err := primitive.ObjectIDFromHex(id)
+func (r repository) Delete(context context.Context, id int) error {
+	user, err := r.FindByID(context, id)
 	if err != nil {
 		return err
 	}
-	if _, err := r.db.Collection(collection).DeleteOne(context, bson.M{"_id": objectID}); err != nil {
-		return err
-	}
-	return nil
+	return r.db.With(context).Model(&user).Delete()
 }
 
-func (r *repository) Count(context context.Context) (int, error) {
-	count, err := r.db.Collection(collection).CountDocuments(context, bson.M{})
-
-	return int(count), err
+func (r repository) Count(context context.Context) (int, error) {
+	var count int
+	err := r.db.With(context).Select("COUNT(*)").From("users").Row(&count)
+	return count, err
 }

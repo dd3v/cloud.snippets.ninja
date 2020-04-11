@@ -91,10 +91,10 @@ func TestUpdateRequestValidation(t *testing.T) {
 		},
 	}
 
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.model.Validate()
-			assert.Equal(t, tt.fail, err != nil)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.model.Validate()
+			assert.Equal(t, tc.fail, err != nil)
 		})
 	}
 }

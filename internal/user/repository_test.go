@@ -9,36 +9,32 @@ import (
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/internal/test"
+	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var db *mongo.Database
+var db *dbcontext.DB
 var r Repository
+var table = "users"
 
-func TestUserRepositoryMain(t *testing.T) {
+func TestRepositoryMain(t *testing.T) {
 	db = test.Database(t)
+	test.TruncateTable(t, db, table)
 	r = NewRepository(db)
 }
-
-func TestUserRepositoryCreate(t *testing.T) {
+func TestRepositoryCreate(t *testing.T) {
 	cases := []struct {
-		name       string
-		repository Repository
-		entity     entity.User
-		fail       bool
+		name   string
+		entity entity.User
+		fail   bool
 	}{
 		{
 			"success",
-			r,
 			entity.User{
-				ID:           primitive.NewObjectID(),
-				Login:        "test_case_0",
-				Email:        "test_case_0@mailservice.com",
-				PasswordHash: "$2a$10$BTAOpHA5j62f56UlEWY3MuaUmY967Pm1kQm3nMCer0wEN2YQGBL8S",
-				Website:      "https://github.com",
-				Token:        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
+				PasswordHash: "hash_100",
+				Login:        "user_100",
+				Email:        "user_100@mail.com",
+				Website:      "user_100.com",
 				Banned:       false,
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
@@ -46,15 +42,12 @@ func TestUserRepositoryCreate(t *testing.T) {
 			false,
 		},
 		{
-			"duplicate email",
-			r,
+			"duplicate login index",
 			entity.User{
-				ID:           primitive.NewObjectID(),
-				Login:        "test_case_2",
-				Email:        "test_case_0@mailservice.com",
-				PasswordHash: "$2a$10$BTAOpHA5j62f56UlEWY3MuaUmY967Pm1kQm3nMCer0wEN2YQGBL8S",
-				Website:      "https://github.com",
-				Token:        "eyJ0eXAiOfdad234fdasdg21wr424rggNiJ9",
+				PasswordHash: "hash_200",
+				Login:        "user_100",
+				Email:        "user_200@mail.com",
+				Website:      "user_200.com",
 				Banned:       false,
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
@@ -62,31 +55,12 @@ func TestUserRepositoryCreate(t *testing.T) {
 			true,
 		},
 		{
-			"duplicate login",
-			r,
+			"duplicate email index",
 			entity.User{
-				ID:           primitive.NewObjectID(),
-				Login:        "test_case_0",
-				Email:        "test_case_4@mailservice.com",
-				PasswordHash: "$2a$10$BTAOpHA5j62f56UlEWY3MuaUmY967Pm1kQm3nMCer0wEN2YQGBL8S",
-				Website:      "https://github.com",
-				Token:        "eyJ0eXAiOfdad234fdasdg21wr424rggNiJ9",
-				Banned:       false,
-				CreatedAt:    time.Now(),
-				UpdatedAt:    time.Now(),
-			},
-			true,
-		},
-		{
-			"duplicate login or email",
-			r,
-			entity.User{
-				ID:           primitive.NewObjectID(),
-				Login:        "test_case_0",
-				Email:        "test_case_0@mailservice.com",
-				PasswordHash: "$2a$10$BTAOpHA5j62f56UlEWY3MuaUmY967Pm1kQm3nMCer0wEN2YQGBL8S",
-				Website:      "https://github.com",
-				Token:        "eyJ0eXAiOfdad234fdasdg21wr424rggNiJ9",
+				PasswordHash: "hash_300",
+				Login:        "user_300",
+				Email:        "user_100@mail.com",
+				Website:      "user_300.com",
 				Banned:       false,
 				CreatedAt:    time.Now(),
 				UpdatedAt:    time.Now(),
@@ -95,80 +69,46 @@ func TestUserRepositoryCreate(t *testing.T) {
 		},
 	}
 
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			err := tt.repository.Create(context.TODO(), tt.entity)
-			assert.Equal(t, tt.fail, err != nil)
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := r.Create(context.TODO(), tc.entity)
+			assert.Equal(t, tc.fail, err != nil)
 		})
 	}
 }
 
-func TestUserRepositoryCount(t *testing.T) {
-	count, err := r.Count(context.TODO())
-	assert.Nil(t, err)
-	assert.NotEqual(t, count, 0)
-}
-
-func TestUserRepositoryFindByID(t *testing.T) {
-	_, err := r.FindByID(context.TODO(), primitive.NewObjectID().Hex())
-	assert.NotNil(t, err)
-	user := entity.User{
-		ID:           primitive.NewObjectID(),
-		Login:        "test_case_create_5",
-		Email:        "test_case_create_5@mailservice.com",
-		PasswordHash: "$2a$10$BTAOpHA5j62f56UlEWY3MuaUmY967Pm1kQm3nMCer0wEN2YQGBL8S",
-		Website:      "https://github.com",
-		Token:        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
-		Banned:       false,
-		CreatedAt:    time.Now().UTC().Round(time.Second),
-		UpdatedAt:    time.Now().UTC().Round(time.Second),
-	}
-	err = r.Create(context.TODO(), user)
-	assert.Nil(t, err)
-	result, err := r.FindByID(context.TODO(), user.ID.Hex())
-	assert.Equal(t, user, result)
-}
-
-func TestUserRepositoryDelete(t *testing.T) {
-	user := entity.User{
-		ID:           primitive.NewObjectID(),
-		Login:        "test_case_create_6",
-		Email:        "test_case_create_6@mailservice.com",
-		PasswordHash: "$2a$10$BTAOpHA5j62f56UlEWY3MuaUmY967Pm1kQm3nMCer0wEN2YQGBL8S",
-		Website:      "https://github.com",
-		Token:        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
-		Banned:       false,
+func TestRepositoryUpdate(t *testing.T) {
+	err := r.Update(context.TODO(), entity.User{
+		ID:           1,
+		PasswordHash: "hash_100",
+		Login:        "user_100",
+		Email:        "user_100@mail.com",
+		Website:      "new_user_website.com",
+		Banned:       true,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
-	}
-	err := r.Create(context.TODO(), user)
+	})
 	assert.Nil(t, err)
-	err = r.Delete(context.TODO(), user.ID.Hex())
+	user, err := r.FindByID(context.TODO(), 1)
 	assert.Nil(t, err)
-	_, err = r.FindByID(context.TODO(), user.ID.Hex())
-	assert.NotNil(t, err)
+	assert.Equal(t, "new_user_website.com", user.Website)
+	assert.Equal(t, true, user.Banned)
 }
 
-func TestUserRepositoryUpdate(t *testing.T) {
-	user := entity.User{
-		ID:           primitive.NewObjectID(),
-		Login:        "test_case_create_7",
-		Email:        "test_case_create_7@mailservice.com",
-		PasswordHash: "$2a$10$BTAOpHA5j62f56UlEWY3MuaUmY967Pm1kQm3nMCer0wEN2YQGBL8S",
-		Website:      "https://github.com",
-		Token:        "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9",
-		Banned:       false,
-		CreatedAt:    time.Now().UTC().Round(time.Second),
-		UpdatedAt:    time.Now().UTC().Round(time.Second),
-	}
-	err := r.Create(context.TODO(), user)
+func TestRepositoryCount(t *testing.T) {
+	count, err := r.Count(context.TODO())
 	assert.Nil(t, err)
-	user.Website = "http://facebook.com"
-	user.Banned = true
-	user.UpdatedAt = time.Now().UTC().Round(time.Second)
-	err = r.Update(context.TODO(), user)
+	assert.Equal(t, true, count != 0)
+}
+
+func TestRepositoryFindByID(t *testing.T) {
+	_, err := r.FindByID(context.TODO(), 1)
 	assert.Nil(t, err)
-	result, err := r.FindByID(context.TODO(), user.ID.Hex())
+}
+
+func TestRepositoryDelete(t *testing.T) {
+	err := r.Delete(context.TODO(), 1)
 	assert.Nil(t, err)
-	assert.Equal(t, user, result)
+	_, err = r.FindByID(context.TODO(), 1)
+	assert.NotNil(t, err)
 }

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/pkg/security"
@@ -16,11 +15,12 @@ import (
 //Service - ...
 type Service interface {
 	Login(context context.Context, request AuthRequest) (map[string]string, error)
-	Refresh(context context.Context, refreshToken string) (string, error)
+	Refresh(context context.Context, refreshToken string) (map[string]string, error)
+	Logout(context context.Context, refreshToken string) error
 }
 
 type userClaims struct {
-	ID    string `json:"id"`
+	ID    int    `json:"id"`
 	Login string `json:"login"`
 	jwt.StandardClaims
 }
@@ -45,7 +45,7 @@ func (s service) Login(context context.Context, request AuthRequest) (map[string
 	}
 	if security.CompareHashAndPassword(user.PasswordHash, request.Password) == true {
 
-		accessToken, err := s.generateAccessToken(user)
+		accessToken, err := s.generateAccessToken(user.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -55,15 +55,16 @@ func (s service) Login(context context.Context, request AuthRequest) (map[string
 			return nil, err
 		}
 
-		refreshTokenClaims := entity.RefreshTokens{
-			ID:        primitive.NewObjectID(),
-			Token:     refreshToken,
-			Exp:       time.Now().Add(time.Hour * 100),
-			CreatedAt: time.Now(),
+		session := entity.Session{
+			UserID:       user.ID,
+			RefreshToken: refreshToken,
+			Exp:          time.Now().Add(time.Minute * 100),
+			IP:           "127.0.0.1",
+			UserAgent:    "local",
+			CreatedAt:    time.Now(),
 		}
 
-		err = s.repository.SaveRefreshToken(context, user.ID.Hex(), refreshTokenClaims)
-		if err != nil {
+		if err = s.repository.CreateSession(context, session); err != nil {
 			return nil, err
 		}
 
@@ -76,30 +77,55 @@ func (s service) Login(context context.Context, request AuthRequest) (map[string
 	return nil, errors.New("Invalid login or password")
 }
 
-func (s service) Refresh(context context.Context, refreshToken string) (string, error) {
+func (s service) Refresh(context context.Context, refreshToken string) (map[string]string, error) {
 
-	err := s.repository.ReplaceRefreshToken(context, refreshToken)
-
+	session, err := s.repository.FindSessionByRefreshToken(context, refreshToken)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	// token, err := jwt.Parse(refreshToken, func(token *jwt.Token) (interface{}, error) {
-	// 	return []byte(s.jwtSigningKey), nil
-	// })
-	// if err != nil {
-	// 	return "", err
-	// }
-	// if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-	// 	fmt.Println(ok)
-	// 	fmt.Println(claims["id"])
-	// }
-	return "", nil
+	if err := s.repository.DeleteSessionByRefreshToken(context, session.RefreshToken); err != nil {
+		return nil, err
+	}
+
+	if session.Exp.After(time.Now()) == true {
+		accessToken, err := s.generateAccessToken(session.UserID)
+		if err != nil {
+			return nil, err
+		}
+
+		refreshToken, err := s.generateRefreshToken()
+		if err != nil {
+			return nil, err
+		}
+
+		session := entity.Session{
+			UserID:       session.UserID,
+			RefreshToken: refreshToken,
+			Exp:          time.Now().Add(time.Minute * 100),
+			IP:           "127.0.0.1",
+			UserAgent:    "local",
+			CreatedAt:    time.Now(),
+		}
+
+		if err = s.repository.CreateSession(context, session); err != nil {
+			return nil, errors.New("session error expired")
+		}
+
+		return map[string]string{
+			"accessToken":  accessToken,
+			"refreshToken": refreshToken,
+		}, nil
+	}
+	return nil, errors.New("session already expired")
 }
 
-func (s service) generateAccessToken(user entity.User) (string, error) {
+func (s service) Logout(context context.Context, token string) error {
+	return s.repository.DeleteSessionByRefreshToken(context, token)
+}
+
+func (s service) generateAccessToken(userID int) (string, error) {
 	jwtClaims := &userClaims{
-		ID:    user.ID.Hex(),
-		Login: user.Login,
+		ID: userID,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * 5).Unix(),
 		},
@@ -111,15 +137,3 @@ func (s service) generateRefreshToken() (string, error) {
 	token, err := uuid.NewUUID()
 	return token.String(), err
 }
-
-// func (s service) generateTokenPair(user entity.User) (map[string]string, error) {
-
-// 	refreshTokenClaims := entity.RefreshTokens{
-// 		ID:        primitive.NewObjectID(),
-// 		Token:     refreshToken.String(),
-// 		Exp:       time.Now().Add(time.Hour * 100),
-// 		CreatedAt: time.Now(),
-// 	}
-// 	_ = s.repository.SaveRefreshToken(context.TODO(), user.ID.Hex(), refreshTokenClaims)
-
-// }

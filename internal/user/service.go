@@ -6,17 +6,14 @@ import (
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/pkg/security"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 //Service - ...
 type Service interface {
-	Find(context context.Context, filter map[string]interface{}) ([]entity.User, error)
-	FindByID(context context.Context, id string) (entity.User, error)
+	FindByID(context context.Context, id int) (entity.User, error)
 	Create(context context.Context, request CreateRequest) (entity.User, error)
-	Update(context context.Context, id string, request UpdateRequest) (entity.User, error)
-	Delete(context context.Context, id string) error
+	Update(context context.Context, id int, request UpdateRequest) (entity.User, error)
+	Delete(context context.Context, id int) error
 	Count(context context.Context) (int, error)
 }
 
@@ -31,11 +28,7 @@ func NewService(repository Repository) Service {
 	}
 }
 
-func (s service) Find(context context.Context, filter map[string]interface{}) ([]entity.User, error) {
-	return s.repository.Find(context, filter)
-}
-
-func (s service) FindByID(context context.Context, id string) (entity.User, error) {
+func (s service) FindByID(context context.Context, id int) (entity.User, error) {
 	return s.repository.FindByID(context, id)
 }
 
@@ -45,19 +38,17 @@ func (s service) Create(context context.Context, request CreateRequest) (entity.
 		return entity.User{}, err
 	}
 	user := entity.User{
-		ID:            primitive.NewObjectID(),
-		Login:         request.Login,
-		Email:         request.Email,
-		PasswordHash:  passwordHash,
-		RefreshTokens: make([]entity.RefreshTokens, 0),
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+		Login:        request.Login,
+		Email:        request.Email,
+		PasswordHash: passwordHash,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
 	}
-	err = s.repository.Create(context, user)
-	return user, err
+	result, err := s.repository.Create(context, user)
+	return result, err
 }
 
-func (s service) Update(context context.Context, id string, request UpdateRequest) (entity.User, error) {
+func (s service) Update(context context.Context, id int, request UpdateRequest) (entity.User, error) {
 	user, err := s.repository.FindByID(context, id)
 	if err != nil {
 		return user, err
@@ -71,7 +62,7 @@ func (s service) Update(context context.Context, id string, request UpdateReques
 	return user, nil
 }
 
-func (s service) Delete(context context.Context, id string) error {
+func (s service) Delete(context context.Context, id int) error {
 	return s.repository.Delete(context, id)
 }
 

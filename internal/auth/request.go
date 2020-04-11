@@ -26,3 +26,13 @@ func (r RefreshRequest) Validate() error {
 		validation.Field(&r.RefreshToken, validation.Required),
 	)
 }
+
+type LogoutRequest struct {
+	RefreshToken string `json:"refreshToken"`
+}
+
+func (r LogoutRequest) Validate() error {
+	return validation.ValidateStruct(&r,
+		validation.Field(&r.RefreshToken, validation.Required),
+	)
+}

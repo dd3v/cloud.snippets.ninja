@@ -3,91 +3,95 @@ package user
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/internal/user/mock"
 	"github.com/stretchr/testify/assert"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var mockRepository Repository
 var testService Service
 
+var users = []entity.User{
+	entity.User{
+		ID:           100,
+		PasswordHash: "hash_100",
+		Login:        "user_100",
+		Email:        "user_100@mail.com",
+		Website:      "user_100.com",
+		Banned:       false,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	},
+	entity.User{
+		ID:           200,
+		PasswordHash: "hash_100",
+		Login:        "user_200",
+		Email:        "user_200@mail.com",
+		Website:      "user_200.com",
+		Banned:       false,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	},
+	entity.User{
+		ID:           300,
+		PasswordHash: "hash_100",
+		Login:        "user_300",
+		Email:        "user_300@mail.com",
+		Website:      "user_300.com",
+		Banned:       false,
+		CreatedAt:    time.Now(),
+		UpdatedAt:    time.Now(),
+	},
+}
+
 func TestMain(t *testing.T) {
-	mockRepository := &mock.MemoryUserRepository{}
+	mockRepository := mock.NewRepository(users)
 	testService = NewService(mockRepository)
 }
 
-func TestUserServiceCreate(t *testing.T) {
-	createUserRequest := CreateRequest{
-		Login:          "test",
-		Email:          "test@mailservice.com",
-		Password:       "qwerty",
-		RepeatPassword: "qwerty",
-	}
-	user, err := testService.Create(context.TODO(), createUserRequest)
-	assert.Equal(t, createUserRequest.Email, user.Email)
-	assert.Nil(t, err)
-	createUserRequest.Login = "error"
-	_, err = testService.Create(context.TODO(), createUserRequest)
-	assert.NotNil(t, err)
-}
-
-func TestUserServiceFind(t *testing.T) {
-	users, err := testService.Find(context.TODO(), make(map[string]interface{}))
-	assert.NotNil(t, users)
-	assert.Nil(t, err)
-}
-
-func TestUserServiceCount(t *testing.T) {
+func TestCount(t *testing.T) {
 	count, err := testService.Count(context.TODO())
-	assert.Equal(t, count, 1)
 	assert.Nil(t, err)
+	assert.Equal(t, count, len(users))
 }
 
-func TestUserServiceUpdate(t *testing.T) {
-	createUserRequest := CreateRequest{
-		Login:          "test",
-		Email:          "test@mailservice.com",
+func TestCreate(t *testing.T) {
+	request := CreateRequest{
+		Login:          "test_user",
+		Email:          "test_user@mailservice.com",
 		Password:       "qwerty",
 		RepeatPassword: "qwerty",
 	}
-	user, err := testService.Create(context.TODO(), createUserRequest)
-	assert.Equal(t, createUserRequest.Email, user.Email)
+	user, err := testService.Create(context.TODO(), request)
 	assert.Nil(t, err)
-	updateUserRequest := UpdateRequest{
-		Website: "personalwebsite.com",
-	}
-	updatedUser, err := testService.Update(context.TODO(), user.ID.Hex(), updateUserRequest)
-	assert.Nil(t, err)
-	assert.Equal(t, user.ID, updatedUser.ID)
+	assert.NotNil(t, user)
 }
 
-func TestUserServiceFindByID(t *testing.T) {
-	createUserRequest := CreateRequest{
-		Login:          "test",
-		Email:          "test@mailservice.com",
-		Password:       "qwerty",
-		RepeatPassword: "qwerty",
+func TestUpdate(t *testing.T) {
+	request := UpdateRequest{
+		Website: "new_test_100.com",
 	}
-	createdUser, err := testService.Create(context.TODO(), createUserRequest)
-	result, err := testService.FindByID(context.TODO(), createdUser.ID.Hex())
-	assert.Equal(t, createdUser.ID, result.ID)
+	user, err := testService.Update(context.TODO(), 100, request)
 	assert.Nil(t, err)
-	_, err = testService.FindByID(context.TODO(), primitive.NewObjectID().Hex())
-	assert.Equal(t, err, nil)
-	_, err = testService.FindByID(context.TODO(), "error")
+	assert.Equal(t, request.Website, user.Website)
+}
+
+func TestFindById(t *testing.T) {
+	id := 100000
+	user, err := testService.FindByID(context.TODO(), id)
 	assert.NotNil(t, err)
+	assert.NotEqual(t, user.ID, id)
+
+	user, err = testService.FindByID(context.TODO(), 100)
+	assert.Nil(t, err)
+	assert.Equal(t, user.ID, 100)
 }
 
-func TestUserServiceDelete(t *testing.T) {
-	createUserRequest := CreateRequest{
-		Login:          "test",
-		Email:          "test@mailservice.com",
-		Password:       "qwerty",
-		RepeatPassword: "qwerty",
-	}
-	user, err := testService.Create(context.TODO(), createUserRequest)
+func TestDelete(t *testing.T) {
+	err := testService.Delete(context.TODO(), 100)
 	assert.Nil(t, err)
-	err = testService.Delete(context.TODO(), user.ID.Hex())
-	assert.Nil(t, err)
+	_, err = testService.FindByID(context.TODO(), 100)
+	assert.NotNil(t, err)
 }

@@ -1,23 +1,21 @@
 package test
 
 import (
-	"context"
-	"log"
 	"testing"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dd3v/snippets.page.backend/internal/config"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
+	dbx "github.com/go-ozzo/ozzo-dbx"
+	_ "github.com/lib/pq"
 )
 
-var database *mongo.Database
+var db *dbcontext.DB
 
-func Database(t *testing.T) *mongo.Database {
-	if database != nil {
-		return database
+//Database - ...
+func Database(t *testing.T) *dbcontext.DB {
+	if db != nil {
+		return db
 	}
 	config := config.NewConfig()
 	_, err := toml.DecodeFile("../../config/app.toml", config)
@@ -25,48 +23,25 @@ func Database(t *testing.T) *mongo.Database {
 		t.Error(err)
 		t.FailNow()
 	}
-	client, err := mongo.NewClient(options.Client().ApplyURI(config.DatabaseURL))
+	pgsql, err := dbx.MustOpen("postgres", config.TestDatabaseDNS)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	err = client.Connect(context.TODO())
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	err = client.Ping(context.TODO(), readpref.Primary())
-	if err != nil {
-		t.Error(err)
-		t.FailNow()
-	}
-	database := client.Database(config.TestDatabaseName)
-	database.Drop(context.TODO())
+	db := dbcontext.New(pgsql)
+	return db
+}
 
-	_, err = client.Database("snippets_test").Collection("users").Indexes().CreateOne(
-		context.Background(),
-		mongo.IndexModel{
-			Keys: bson.M{
-				"email": 1,
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
+//TruncateTable - ...
+func TruncateTable(t *testing.T, db *dbcontext.DB, table string) {
+	_, err := db.DB().TruncateTable(table).Execute()
 	if err != nil {
-		log.Fatal(err)
+		t.Error(err)
+		t.FailNow()
 	}
-	_, err = client.Database("snippets_test").Collection("users").Indexes().CreateOne(
-		context.Background(),
-		mongo.IndexModel{
-			Keys: bson.M{
-				"login": 1,
-			},
-			Options: options.Index().SetUnique(true),
-		},
-	)
+	_, err = db.DB().NewQuery("ALTER SEQUENCE " + table + "_id_seq RESTART").Execute()
 	if err != nil {
-		log.Fatal(err)
+		t.Error(err)
+		t.FailNow()
 	}
-
-	return database
 }

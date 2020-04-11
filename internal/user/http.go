@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"strconv"
 
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 )
@@ -23,16 +24,20 @@ func NewHTTPHandler(router *routing.RouteGroup, service Service) {
 }
 
 func (r resource) list(c *routing.Context) error {
-	filter := map[string]interface{}{}
-	users, err := r.service.Find(context.TODO(), filter)
+
+	cnt, err := r.service.Count(context.TODO())
 	if err != nil {
 		return err
 	}
-	return c.Write(users)
+
+	return c.Write(cnt)
 }
 
 func (r resource) get(c *routing.Context) error {
-	id := c.Param("id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return err
+	}
 	user, err := r.service.FindByID(context.TODO(), id)
 	if err != nil {
 		return err
@@ -57,13 +62,15 @@ func (r resource) create(c *routing.Context) error {
 }
 
 func (r resource) update(c *routing.Context) error {
-	id := c.Param("id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return err
+	}
 	var request UpdateRequest
 	if err := c.Read(&request); err != nil {
 		return err
 	}
-	err := request.Validate()
-	if err != nil {
+	if err = request.Validate(); err != nil {
 		return err
 	}
 	user, err := r.service.Update(context.TODO(), id, request)
@@ -74,7 +81,10 @@ func (r resource) update(c *routing.Context) error {
 }
 
 func (r resource) delete(c *routing.Context) error {
-	id := c.Param("id")
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return err
+	}
 
 	if err := r.service.Delete(context.TODO(), id); err != nil {
 		return err

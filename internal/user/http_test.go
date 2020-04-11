@@ -4,6 +4,6 @@ import (
 	"testing"
 )
 
-func TestMeHandler(t *testing.T) {
+func TestUserEndpoints(t *testing.T) {
 
 }
