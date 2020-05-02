@@ -2,6 +2,7 @@ package mock
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
@@ -19,15 +20,18 @@ func NewRepository(items []entity.User) UserMemoryRepository {
 	return r
 }
 
+func (r UserMemoryRepository) List(context context.Context, limit int, offset int) ([]entity.User, error) {
+	return r.items, nil
+}
+
 func (r UserMemoryRepository) FindByID(context context.Context, id int) (entity.User, error) {
 	var user entity.User
-
 	for i, item := range r.items {
 		if item.ID == id {
 			return r.items[i], nil
 		}
 	}
-	return user, errorRepository
+	return user, sql.ErrNoRows
 }
 
 func (r UserMemoryRepository) Create(context context.Context, user entity.User) (entity.User, error) {

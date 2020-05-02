@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 )
@@ -13,31 +11,27 @@ type resource struct {
 }
 
 //NewHTTPHandler - ...
-func NewHTTPHandler(router *routing.RouteGroup, service Service) {
+func NewHTTPHandler(router *routing.RouteGroup, jwtAuthHandler routing.Handler, service Service) {
 	r := resource{
 		service: service,
 	}
-	router.Get("/auth/me", r.me)
 	router.Post("/auth/login", r.login)
+	router.Use(jwtAuthHandler)
 	router.Post("/auth/refresh", r.refresh)
 	router.Post("/auth/logout", r.logout)
 }
 
-func (r resource) me(c *routing.Context) error {
-	return c.Write("/me")
-}
-
 func (r resource) login(c *routing.Context) error {
-	var request AuthRequest
+	var request LoginRequest
 	if err := c.Read(&request); err != nil {
 		return err
 	}
 	if err := request.Validate(); err != nil {
-		return c.WriteWithStatus(err, http.StatusBadRequest)
+		return err
 	}
-	token, err := r.service.Login(context.TODO(), request)
+	token, err := r.service.Login(c.Request.Context(), request)
 	if err != nil {
-		return c.WriteWithStatus(err.Error(), http.StatusBadRequest)
+		return err
 	}
 	return c.Write(token)
 }
@@ -45,15 +39,15 @@ func (r resource) login(c *routing.Context) error {
 func (r resource) refresh(c *routing.Context) error {
 	var request RefreshRequest
 	if err := c.Read(&request); err != nil {
-		return c.WriteWithStatus(err, http.StatusBadRequest)
+		return err
 	}
 	if err := request.Validate(); err != nil {
-		return c.WriteWithStatus(err, http.StatusBadRequest)
+		return err
 	}
-	token, err := r.service.Refresh(context.TODO(), request.RefreshToken)
+	token, err := r.service.Refresh(c.Request.Context(), request.RefreshToken)
 	fmt.Println(err)
 	if err != nil {
-		return c.WriteWithStatus("session expired", http.StatusForbidden)
+		return err
 	}
 	return c.Write(token)
 }
@@ -61,11 +55,11 @@ func (r resource) refresh(c *routing.Context) error {
 func (r resource) logout(c *routing.Context) error {
 	var request LogoutRequest
 	if err := c.Read(&request); err != nil {
-		return c.WriteWithStatus(err, http.StatusBadRequest)
+		return err
 	}
 	if err := request.Validate(); err != nil {
-		return c.WriteWithStatus(err, http.StatusBadRequest)
+		return err
 	}
-	err := r.service.Logout(context.TODO(), request.RefreshToken)
-	return c.WriteWithStatus(err, http.StatusOK)
+	err := r.service.Logout(c.Request.Context(), request.RefreshToken)
+	return err
 }

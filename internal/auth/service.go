@@ -5,17 +5,16 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/pkg/security"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/google/uuid"
 )
 
 //Service - ...
 type Service interface {
-	Login(context context.Context, request AuthRequest) (map[string]string, error)
-	Refresh(context context.Context, refreshToken string) (map[string]string, error)
+	Login(context context.Context, request LoginRequest) (entity.TokenPair, error)
+	Refresh(context context.Context, refreshToken string) (entity.TokenPair, error)
 	Logout(context context.Context, refreshToken string) error
 }
 
@@ -32,27 +31,27 @@ type service struct {
 
 //NewService - ...
 func NewService(JWTSigningKey string, repository Repository) Service {
-	return &service{
+	return service{
 		jwtSigningKey: JWTSigningKey,
 		repository:    repository,
 	}
 }
 
-func (s service) Login(context context.Context, request AuthRequest) (map[string]string, error) {
+func (s service) Login(context context.Context, request LoginRequest) (entity.TokenPair, error) {
 	user, err := s.repository.FindUser(context, request.Login)
 	if err != nil {
-		return nil, errors.New("Invalid login or password")
+		return entity.TokenPair{}, errors.New("Invalid login or password")
 	}
 	if security.CompareHashAndPassword(user.PasswordHash, request.Password) == true {
 
 		accessToken, err := s.generateAccessToken(user.ID)
 		if err != nil {
-			return nil, err
+			return entity.TokenPair{}, err
 		}
 
 		refreshToken, err := s.generateRefreshToken()
 		if err != nil {
-			return nil, err
+			return entity.TokenPair{}, err
 		}
 
 		session := entity.Session{
@@ -65,37 +64,37 @@ func (s service) Login(context context.Context, request AuthRequest) (map[string
 		}
 
 		if err = s.repository.CreateSession(context, session); err != nil {
-			return nil, err
+			return entity.TokenPair{}, err
 		}
 
-		return map[string]string{
-			"accessToken":  accessToken,
-			"refreshToken": refreshToken,
+		return entity.TokenPair{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
 		}, nil
 	}
 
-	return nil, errors.New("Invalid login or password")
+	return entity.TokenPair{}, errors.New("Invalid login or password")
 }
 
-func (s service) Refresh(context context.Context, refreshToken string) (map[string]string, error) {
+func (s service) Refresh(context context.Context, refreshToken string) (entity.TokenPair, error) {
 
 	session, err := s.repository.FindSessionByRefreshToken(context, refreshToken)
 	if err != nil {
-		return nil, err
+		return entity.TokenPair{}, err
 	}
 	if err := s.repository.DeleteSessionByRefreshToken(context, session.RefreshToken); err != nil {
-		return nil, err
+		return entity.TokenPair{}, err
 	}
 
 	if session.Exp.After(time.Now()) == true {
 		accessToken, err := s.generateAccessToken(session.UserID)
 		if err != nil {
-			return nil, err
+			return entity.TokenPair{}, err
 		}
 
 		refreshToken, err := s.generateRefreshToken()
 		if err != nil {
-			return nil, err
+			return entity.TokenPair{}, err
 		}
 
 		session := entity.Session{
@@ -108,15 +107,15 @@ func (s service) Refresh(context context.Context, refreshToken string) (map[stri
 		}
 
 		if err = s.repository.CreateSession(context, session); err != nil {
-			return nil, errors.New("session error expired")
+			return entity.TokenPair{}, errors.New("session error expired")
 		}
 
-		return map[string]string{
-			"accessToken":  accessToken,
-			"refreshToken": refreshToken,
+		return entity.TokenPair{
+			AccessToken:  accessToken,
+			RefreshToken: refreshToken,
 		}, nil
 	}
-	return nil, errors.New("session already expired")
+	return entity.TokenPair{}, errors.New("session already expired")
 }
 
 func (s service) Logout(context context.Context, token string) error {
@@ -127,7 +126,7 @@ func (s service) generateAccessToken(userID int) (string, error) {
 	jwtClaims := &userClaims{
 		ID: userID,
 		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: time.Now().Add(time.Minute * 5).Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * 2315).Unix(),
 		},
 	}
 	return jwt.NewWithClaims(jwt.SigningMethodHS256, jwtClaims).SignedString([]byte(s.jwtSigningKey))

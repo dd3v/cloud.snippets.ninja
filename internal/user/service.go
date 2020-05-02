@@ -10,6 +10,7 @@ import (
 
 //Service - ...
 type Service interface {
+	List(context context.Context, limit int, offset int) ([]entity.User, error)
 	FindByID(context context.Context, id int) (entity.User, error)
 	Create(context context.Context, request CreateRequest) (entity.User, error)
 	Update(context context.Context, id int, request UpdateRequest) (entity.User, error)
@@ -23,9 +24,13 @@ type service struct {
 
 //NewService - ...
 func NewService(repository Repository) Service {
-	return &service{
+	return service{
 		repository: repository,
 	}
+}
+
+func (s service) List(context context.Context, limit int, offset int) ([]entity.User, error) {
+	return s.repository.List(context, limit, offset)
 }
 
 func (s service) FindByID(context context.Context, id int) (entity.User, error) {
@@ -44,6 +49,7 @@ func (s service) Create(context context.Context, request CreateRequest) (entity.
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}
+
 	result, err := s.repository.Create(context, user)
 	return result, err
 }

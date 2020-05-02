@@ -9,13 +9,21 @@ type User struct {
 	ID           int       `json:"id"`
 	PasswordHash string    `json:"-" `
 	Login        string    `json:"login" `
-	Email        string    `json:"-" `
+	Email        string    `json:"email,omitempty" `
 	Website      string    `json:"website"`
 	Banned       bool      `json:"banned" `
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
 
+//GetPublicProfile - returns only public information
+func (u User) GetPublicProfile() User {
+	u.Email = ""
+	u.PasswordHash = ""
+	return u
+}
+
+//TableName - returns table name in database
 func (u User) TableName() string {
 	return "users"
 }

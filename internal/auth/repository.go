@@ -22,7 +22,7 @@ type repository struct {
 
 //NewRepository - ...
 func NewRepository(db *dbcontext.DB) Repository {
-	return &repository{
+	return repository{
 		db: db,
 	}
 }

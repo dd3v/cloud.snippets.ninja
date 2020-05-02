@@ -9,8 +9,8 @@ import (
 
 //CreateRequest - ...
 type CreateRequest struct {
-	Login          string `json:"login" `
-	Email          string `json:"email" `
+	Login          string `json:"login"`
+	Email          string `json:"email"`
 	Password       string `json:"password"`
 	RepeatPassword string `json:"repeat_password"`
 }

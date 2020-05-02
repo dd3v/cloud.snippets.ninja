@@ -9,6 +9,7 @@ import (
 
 //Repository - ...
 type Repository interface {
+	List(context context.Context, limit int, offset int) ([]entity.User, error)
 	FindByID(context context.Context, id int) (entity.User, error)
 	Create(context context.Context, user entity.User) (entity.User, error)
 	Update(context context.Context, user entity.User) error
@@ -22,9 +23,15 @@ type repository struct {
 
 //NewRepository - ...
 func NewRepository(db *dbcontext.DB) Repository {
-	return &repository{
+	return repository{
 		db: db,
 	}
+}
+
+func (r repository) List(context context.Context, limit int, offset int) ([]entity.User, error) {
+	var users []entity.User
+	err := r.db.With(context).Select().Limit(int64(limit)).Offset(int64(offset)).OrderBy("id").All(&users)
+	return users, err
 }
 
 func (r repository) FindByID(context context.Context, id int) (entity.User, error) {

@@ -5,12 +5,12 @@ import (
 )
 
 //AuthRequest - ...
-type AuthRequest struct {
+type LoginRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-func (r AuthRequest) Validate() error {
+func (r LoginRequest) Validate() error {
 	return validation.ValidateStruct(&r,
 		validation.Field(&r.Login, validation.Required, validation.Length(2, 50)),
 		validation.Field(&r.Password, validation.Required, validation.Length(6, 50)),
@@ -18,7 +18,7 @@ func (r AuthRequest) Validate() error {
 }
 
 type RefreshRequest struct {
-	RefreshToken string `json:"refreshToken"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (r RefreshRequest) Validate() error {
@@ -28,7 +28,7 @@ func (r RefreshRequest) Validate() error {
 }
 
 type LogoutRequest struct {
-	RefreshToken string `json:"refreshToken"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 func (r LogoutRequest) Validate() error {

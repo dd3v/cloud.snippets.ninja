@@ -14,7 +14,7 @@ var mockRepository Repository
 var testService Service
 
 var users = []entity.User{
-	entity.User{
+	{
 		ID:           100,
 		PasswordHash: "hash_100",
 		Login:        "user_100",
@@ -24,7 +24,7 @@ var users = []entity.User{
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	},
-	entity.User{
+	{
 		ID:           200,
 		PasswordHash: "hash_100",
 		Login:        "user_200",
@@ -34,7 +34,7 @@ var users = []entity.User{
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	},
-	entity.User{
+	{
 		ID:           300,
 		PasswordHash: "hash_100",
 		Login:        "user_300",

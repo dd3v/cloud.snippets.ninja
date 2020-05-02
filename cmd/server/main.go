@@ -13,6 +13,7 @@ import (
 
 	"github.com/dd3v/snippets.page.backend/internal/auth"
 	"github.com/dd3v/snippets.page.backend/internal/config"
+	"github.com/dd3v/snippets.page.backend/internal/errors"
 	"github.com/dd3v/snippets.page.backend/internal/user"
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
 	dbx "github.com/go-ozzo/ozzo-dbx"
@@ -45,18 +46,20 @@ func main() {
 	}()
 
 	db := dbcontext.New(pgsql)
+	jwtAuthHandler := auth.Handler(config.JWTSigningKey)
 
 	router := routing.New()
 	router.Use(
 		content.TypeNegotiator(content.JSON),
+		errors.Handler(),
 	)
 	apiGroup := router.Group("/api")
 
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
-	user.NewHTTPHandler(apiGroup.Group("/v1"), userService)
+	user.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, userService)
 
-	auth.NewHTTPHandler(apiGroup.Group("/v1"), auth.NewService(config.JWTSigningKey, auth.NewRepository(db)))
+	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, auth.NewService(config.JWTSigningKey, auth.NewRepository(db)))
 
 	address := fmt.Sprintf(":%v", config.BindAddr)
 	httpServer := &http.Server{
