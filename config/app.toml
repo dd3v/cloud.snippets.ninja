@@ -1,5 +1,5 @@
 bind_addr = "8888"
 log_level = "debug"
-database_dns = "postgres://localhost/snippets?sslmode=disable&user=postgres&password=postgres"
-test_database_dns = "postgres://localhost/snippets_test?sslmode=disable&user=postgres&password=postgres"
+database_dns = "root:root@/snippets?parseTime=true"
+test_database_dns = "root:root@/snippets_test?parseTime=true"
 jwt_signing_key = "3eo2aslQWk32mAxaQwk3As"

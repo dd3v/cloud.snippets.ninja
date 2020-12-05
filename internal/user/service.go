@@ -59,7 +59,6 @@ func (s service) Update(context context.Context, id int, request UpdateRequest) 
 	if err != nil {
 		return user, err
 	}
-	user.Website = request.Website
 	user.UpdatedAt = time.Now()
 
 	if err := s.repository.Update(context, user); err != nil {

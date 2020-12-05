@@ -22,5 +22,6 @@ require (
 	golang.org/x/crypto v0.0.0-20200221170553-0f24fbd83dfb
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859
 	gopkg.in/errgo.v2 v2.1.0
+	gopkg.in/guregu/null.v4 v4.0.0
 	honnef.co/go/tools v0.0.1-2020.1.3 // indirect
 )

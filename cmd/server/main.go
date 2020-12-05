@@ -14,10 +14,11 @@ import (
 	"github.com/dd3v/snippets.page.backend/internal/auth"
 	"github.com/dd3v/snippets.page.backend/internal/config"
 	"github.com/dd3v/snippets.page.backend/internal/errors"
+	"github.com/dd3v/snippets.page.backend/internal/snippet"
 	"github.com/dd3v/snippets.page.backend/internal/user"
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
 	dbx "github.com/go-ozzo/ozzo-dbx"
-	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var (
@@ -35,17 +36,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	pgsql, err := dbx.MustOpen("postgres", config.DatabaseDNS)
+	mysql, err := dbx.MustOpen("mysql", config.DatabaseDNS)
 	if err != nil {
 		fmt.Printf("postgres connection error: %s", err)
 	}
 	defer func() {
-		if err := pgsql.Close(); err != nil {
+		if err := mysql.Close(); err != nil {
 			fmt.Printf("postgres runtime error: %s", err)
 		}
 	}()
 
-	db := dbcontext.New(pgsql)
+	db := dbcontext.New(mysql)
 	jwtAuthHandler := auth.Handler(config.JWTSigningKey)
 
 	router := routing.New()
@@ -60,6 +61,7 @@ func main() {
 	user.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, userService)
 
 	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, auth.NewService(config.JWTSigningKey, auth.NewRepository(db)))
+	snippet.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, snippet.NewService(snippet.NewRepository(db)))
 
 	address := fmt.Sprintf(":%v", config.BindAddr)
 	httpServer := &http.Server{

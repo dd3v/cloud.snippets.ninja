@@ -10,8 +10,6 @@ type User struct {
 	PasswordHash string    `json:"-" `
 	Login        string    `json:"login" `
 	Email        string    `json:"email,omitempty" `
-	Website      string    `json:"website"`
-	Banned       bool      `json:"banned" `
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
 }
