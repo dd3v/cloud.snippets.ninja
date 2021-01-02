@@ -7,7 +7,8 @@ import (
 	"github.com/dd3v/snippets.page.backend/internal/config"
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
 	dbx "github.com/go-ozzo/ozzo-dbx"
-	_ "github.com/lib/pq"
+	_ "github.com/go-sql-driver/mysql"
+
 )
 
 var db *dbcontext.DB
@@ -23,12 +24,12 @@ func Database(t *testing.T) *dbcontext.DB {
 		t.Error(err)
 		t.FailNow()
 	}
-	pgsql, err := dbx.MustOpen("postgres", config.TestDatabaseDNS)
+	mysql, err := dbx.MustOpen("mysql", config.TestDatabaseDNS)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	db := dbcontext.New(pgsql)
+	db := dbcontext.New(mysql)
 	return db
 }
 
@@ -39,7 +40,7 @@ func TruncateTable(t *testing.T, db *dbcontext.DB, table string) {
 		t.Error(err)
 		t.FailNow()
 	}
-	_, err = db.DB().NewQuery("ALTER SEQUENCE " + table + "_id_seq RESTART").Execute()
+	_, err = db.DB().NewQuery("ALTER TABLE " + table + " AUTO_INCREMENT = 1").Execute()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

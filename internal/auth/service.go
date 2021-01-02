@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
@@ -41,7 +40,6 @@ func NewService(JWTSigningKey string, repository Repository) Service {
 func (s service) Login(context context.Context, request LoginRequest) (entity.TokenPair, error) {
 	user, err := s.repository.FindUser(context, request.Login)
 	if err != nil {
-		fmt.Println(err)
 		return entity.TokenPair{}, errors.New("Invalid login or password")
 	}
 	if security.CompareHashAndPassword(user.PasswordHash, request.Password) == true {

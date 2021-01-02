@@ -17,8 +17,6 @@ func TestUserEndpoint(t *testing.T) {
 		PasswordHash: "hash",
 		Login:        "test_100",
 		Email:        "test_100@gmail.com",
-		Website:      "homepage.com",
-		Banned:       false,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	}}
@@ -68,7 +66,7 @@ func TestUserEndpoint(t *testing.T) {
 			Body:         `{"website":"http://github.com"}`,
 			Header:       test.MockAuthHeader(),
 			WantStatus:   http.StatusOK,
-			WantResponse: `*github.com*`,
+			WantResponse: `*test_100@gmail.com*`,
 		},
 		{
 			Name:         "user by id - unauthorized",

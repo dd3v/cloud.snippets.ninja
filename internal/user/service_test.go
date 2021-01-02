@@ -19,8 +19,6 @@ var users = []entity.User{
 		PasswordHash: "hash_100",
 		Login:        "user_100",
 		Email:        "user_100@mail.com",
-		Website:      "user_100.com",
-		Banned:       false,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	},
@@ -29,8 +27,6 @@ var users = []entity.User{
 		PasswordHash: "hash_100",
 		Login:        "user_200",
 		Email:        "user_200@mail.com",
-		Website:      "user_200.com",
-		Banned:       false,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	},
@@ -39,14 +35,12 @@ var users = []entity.User{
 		PasswordHash: "hash_100",
 		Login:        "user_300",
 		Email:        "user_300@mail.com",
-		Website:      "user_300.com",
-		Banned:       false,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	},
 }
 
-func TestMain(t *testing.T) {
+func TestService(t *testing.T) {
 	mockRepository := mock.NewRepository(users)
 	testService = NewService(mockRepository)
 }
@@ -73,9 +67,8 @@ func TestUpdate(t *testing.T) {
 	request := UpdateRequest{
 		Website: "new_test_100.com",
 	}
-	user, err := testService.Update(context.TODO(), 100, request)
+	_, err := testService.Update(context.TODO(), 100, request)
 	assert.Nil(t, err)
-	assert.Equal(t, request.Website, user.Website)
 }
 
 func TestFindById(t *testing.T) {

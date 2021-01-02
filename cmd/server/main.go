@@ -38,11 +38,11 @@ func main() {
 
 	mysql, err := dbx.MustOpen("mysql", config.DatabaseDNS)
 	if err != nil {
-		fmt.Printf("postgres connection error: %s", err)
+		fmt.Printf("mysql connection error: %s", err)
 	}
 	defer func() {
 		if err := mysql.Close(); err != nil {
-			fmt.Printf("postgres runtime error: %s", err)
+			fmt.Printf("mysql runtime error: %s", err)
 		}
 	}()
 

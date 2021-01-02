@@ -2,6 +2,7 @@ package snippet
 
 import (
 	"context"
+	"time"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 )
@@ -12,12 +13,11 @@ type SearchRequest struct {
 }
 
 type Service interface {
-	GetByUserID(context context.Context, userID int, request QuerySnippetsRequest) ([]entity.Snippet, error)
-	List(context context.Context, public bool, limit int, offset int) ([]entity.Snippet, error)
+	FindByUserID(context context.Context, userID int, request OwnSnippetsRequest) ([]entity.Snippet, error)
 	FindByID(context context.Context, id int) (entity.Snippet, error)
-	//Create(context context.Context, request CreateRequest) (entity.User, error)
-	//Update(context context.Context, id int, request UpdateRequest) (entity.User, error)
-	Delete(context context.Context, id int) error
+	Create(context context.Context, userID int, request CreateSnippetRequest) (entity.Snippet, error)
+	Update(context context.Context, id int, userID int, request UpdateSnippetRequest) (entity.Snippet, error)
+	Delete(context context.Context, id int, userID int) (entity.Snippet, error)
 	Count(context context.Context) (int, error)
 }
 
@@ -32,31 +32,63 @@ func NewService(repository Repository) Service {
 	}
 }
 
-func (s service) GetByUserID(context context.Context, userID int, request QuerySnippetsRequest) ([]entity.Snippet, error) {
-
+func (s service) FindByUserID(context context.Context, userID int, request OwnSnippetsRequest) ([]entity.Snippet, error) {
 	conditions := map[string]interface{}{}
-
-	conditions["favorite"] = request.Favorite
-	conditions["public"] = request.Public
-	if request.Keywords != "" {
-		conditions["keywords"] = request.Keywords
+	if request.Access != -1 {
+		conditions["access"] = request.Access
 	}
-
+	if request.Title != "" {
+		conditions["title"] = request.Title
+	}
+	if request.Favorite != -1 {
+		conditions["favorite"] = request.Favorite
+	}
 	snippets, err := s.repository.GetByUserID(context, userID, request.Limit, request.Offset, conditions)
-
 	return snippets, err
 }
 
-func (s service) List(context context.Context, public bool, limit int, offset int) ([]entity.Snippet, error) {
-	return s.repository.List(context, limit, offset)
+func (s service) Create(context context.Context, userID int, request CreateSnippetRequest) (entity.Snippet, error) {
+	return s.repository.Create(context, entity.Snippet{
+		UserID:        userID,
+		Favorite:      request.Favorite,
+		Access:        request.Access,
+		Title:         request.Title,
+		Content:       request.Content,
+		FileExtension: request.FileExtension,
+		EditorOptions: request.EditorOptions,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+	})
+}
+
+func (s service) Update(context context.Context, id int, userID int, request UpdateSnippetRequest) (entity.Snippet, error) {
+	snippet, err := s.repository.GetByIDAndUserID(context, id, userID)
+	if err != nil {
+		return snippet,err
+	}
+	snippet.Favorite = request.Favorite
+	snippet.Access = request.Access
+	snippet.Title = request.Title
+	snippet.Content.String = request.Content
+	snippet.FileExtension = request.FileExtension
+	snippet.EditorOptions = request.EditorOptions
+	snippet.UpdatedAt = time.Now()
+
+	return s.repository.Update(context, snippet)
 }
 
 func (s service) FindByID(context context.Context, id int) (entity.Snippet, error) {
 	return s.repository.FindByID(context, id)
 }
 
-func (s service) Delete(context context.Context, id int) error {
-	return s.repository.Delete(context, id)
+func (s service) Delete(context context.Context, id int, userID int) (entity.Snippet, error) {
+
+	snippet, err := s.repository.GetByIDAndUserID(context, id, userID)
+	if err != nil {
+		return snippet,err
+	}
+
+	return s.repository.Delete(context, snippet)
 }
 
 func (s service) Count(context context.Context) (int, error) {

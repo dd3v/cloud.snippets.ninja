@@ -29,8 +29,6 @@ var users = []entity.User{
 		PasswordHash: "$2a$10$Ln6XYtZOD.YfxJk/HFwVle7gFpE.dyWueCaLbsUhW6vtWbBGtFUyy",
 		Login:        "user_100",
 		Email:        "user_100@mail.com",
-		Website:      "user_100.com",
-		Banned:       false,
 		CreatedAt:    time.Now(),
 		UpdatedAt:    time.Now(),
 	},
