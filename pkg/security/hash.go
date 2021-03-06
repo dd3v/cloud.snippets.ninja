@@ -1,7 +1,6 @@
 package security
 
 import (
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -13,9 +12,5 @@ func GenerateHashFromPassword(password string) (string, error) {
 
 //CompareHashAndPassword - ...
 func CompareHashAndPassword(hash string, password string) bool {
-
-	fmt.Println(hash);
-	fmt.Println(password);
-
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil
 }

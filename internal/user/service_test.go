@@ -73,11 +73,11 @@ func TestUpdate(t *testing.T) {
 
 func TestFindById(t *testing.T) {
 	id := 100000
-	user, err := testService.FindByID(context.TODO(), id)
+	user, err := testService.GetByID(context.TODO(), id)
 	assert.NotNil(t, err)
 	assert.NotEqual(t, user.ID, id)
 
-	user, err = testService.FindByID(context.TODO(), 100)
+	user, err = testService.GetByID(context.TODO(), 100)
 	assert.Nil(t, err)
 	assert.Equal(t, user.ID, 100)
 }
@@ -85,6 +85,6 @@ func TestFindById(t *testing.T) {
 func TestDelete(t *testing.T) {
 	err := testService.Delete(context.TODO(), 100)
 	assert.Nil(t, err)
-	_, err = testService.FindByID(context.TODO(), 100)
+	_, err = testService.GetByID(context.TODO(), 100)
 	assert.NotNil(t, err)
 }

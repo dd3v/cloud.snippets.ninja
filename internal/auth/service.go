@@ -13,9 +13,9 @@ import (
 
 //Service - ...
 type Service interface {
-	Login(context context.Context, request LoginRequest) (entity.TokenPair, error)
-	Refresh(context context.Context, refreshToken string) (entity.TokenPair, error)
-	Logout(context context.Context, refreshToken string) error
+	Login(ctx context.Context, request LoginRequest) (entity.TokenPair, error)
+	Refresh(ctx context.Context, refreshToken string) (entity.TokenPair, error)
+	Logout(ctx context.Context, refreshToken string) error
 }
 
 type userClaims struct {
@@ -37,23 +37,20 @@ func NewService(JWTSigningKey string, repository Repository) Service {
 	}
 }
 
-func (s service) Login(context context.Context, request LoginRequest) (entity.TokenPair, error) {
-	user, err := s.repository.FindUser(context, request.Login)
+func (s service) Login(ctx context.Context, request LoginRequest) (entity.TokenPair, error) {
+	user, err := s.repository.FindUserByLoginOrEmail(ctx, request.Login)
 	if err != nil {
 		return entity.TokenPair{}, errors.New("Invalid login or password")
 	}
 	if security.CompareHashAndPassword(user.PasswordHash, request.Password) == true {
-
 		accessToken, err := s.generateAccessToken(user.ID)
 		if err != nil {
 			return entity.TokenPair{}, err
 		}
-
 		refreshToken, err := s.generateRefreshToken()
 		if err != nil {
 			return entity.TokenPair{}, err
 		}
-
 		session := entity.Session{
 			UserID:       user.ID,
 			RefreshToken: refreshToken,
@@ -62,41 +59,34 @@ func (s service) Login(context context.Context, request LoginRequest) (entity.To
 			UserAgent:    "local",
 			CreatedAt:    time.Now(),
 		}
-
-		if err = s.repository.CreateSession(context, session); err != nil {
+		if err = s.repository.CreateSession(ctx, session); err != nil {
 			return entity.TokenPair{}, err
 		}
-
 		return entity.TokenPair{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}, nil
 	}
-
 	return entity.TokenPair{}, errors.New("Invalid login or password")
 }
 
-func (s service) Refresh(context context.Context, refreshToken string) (entity.TokenPair, error) {
-
-	session, err := s.repository.FindSessionByRefreshToken(context, refreshToken)
+func (s service) Refresh(ctx context.Context, refreshToken string) (entity.TokenPair, error) {
+	session, err := s.repository.FindSessionByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return entity.TokenPair{}, err
 	}
-	if err := s.repository.DeleteSessionByRefreshToken(context, session.RefreshToken); err != nil {
+	if err := s.repository.DeleteSessionByRefreshToken(ctx, session.RefreshToken); err != nil {
 		return entity.TokenPair{}, err
 	}
-
 	if session.Exp.After(time.Now()) == true {
 		accessToken, err := s.generateAccessToken(session.UserID)
 		if err != nil {
 			return entity.TokenPair{}, err
 		}
-
 		refreshToken, err := s.generateRefreshToken()
 		if err != nil {
 			return entity.TokenPair{}, err
 		}
-
 		session := entity.Session{
 			UserID:       session.UserID,
 			RefreshToken: refreshToken,
@@ -105,11 +95,9 @@ func (s service) Refresh(context context.Context, refreshToken string) (entity.T
 			UserAgent:    "local",
 			CreatedAt:    time.Now(),
 		}
-
-		if err = s.repository.CreateSession(context, session); err != nil {
+		if err = s.repository.CreateSession(ctx, session); err != nil {
 			return entity.TokenPair{}, errors.New("session error expired")
 		}
-
 		return entity.TokenPair{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
@@ -118,8 +106,8 @@ func (s service) Refresh(context context.Context, refreshToken string) (entity.T
 	return entity.TokenPair{}, errors.New("session already expired")
 }
 
-func (s service) Logout(context context.Context, token string) error {
-	return s.repository.DeleteSessionByRefreshToken(context, token)
+func (s service) Logout(ctx context.Context, token string) error {
+	return s.repository.DeleteSessionByRefreshToken(ctx, token)
 }
 
 func (s service) generateAccessToken(userID int) (string, error) {

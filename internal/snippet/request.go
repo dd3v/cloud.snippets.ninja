@@ -1,80 +1,66 @@
 package snippet
 
 import (
+	"github.com/dd3v/snippets.page.backend/internal/entity"
+	"github.com/dd3v/snippets.page.backend/pkg/datatype"
 	validation "github.com/go-ozzo/ozzo-validation"
-	"gopkg.in/guregu/null.v4"
-	"time"
 )
 
-//QuerySnippetsRequest - ...
-type OwnSnippetsRequest struct {
-	Limit    int    `form:"limit"`
-	Offset   int    `form:"offset"`
-	Favorite int    `form:"favorite"`
-	Access   int    `form:"access"`
-	Title    string `form:"title"`
+type list struct {
+	Favorite    string `form:"favorite"`
+	AccessLevel string `form:"access_level"`
+	Title       string `form:"title"`
+	SortBy      string `form:"sort_by"`
+	OrderBy     string `form:"order_by"`
+	Page        int    `form:"page"`
+	Limit       int    `form:"limit"`
 }
 
-//OwnSnippetsRequest -
-func NewOwnSnippetsRequest() OwnSnippetsRequest {
-	return OwnSnippetsRequest{Limit: 100, Offset: 0, Favorite: -1, Access: -1, Title: ""}
+func (l list) filterConditions() map[string]string {
+	conditions := make(map[string]string)
+	if l.Favorite != "" {
+		conditions["favorite"] = l.Favorite
+	}
+	if l.AccessLevel != "" {
+		conditions["favorite"] = l.AccessLevel
+	}
+	if l.Title != "" {
+		conditions["title"] = l.Title
+	}
+	return conditions
 }
 
-//Validate - ...
-func (r OwnSnippetsRequest) Validate() error {
-	return validation.ValidateStruct(&r,
-		validation.Field(&r.Limit, validation.Min(1), validation.Max(250)),
-		validation.Field(&r.Offset, validation.Min(0)),
-		validation.Field(&r.Favorite, validation.Min(-1), validation.Max(1)),
-		validation.Field(&r.Access, validation.Min(-1), validation.Max(1)),
-		validation.Field(&r.Title, validation.Length(0, 50)),
+func newList() list {
+	return list{Favorite: "", AccessLevel: "", Title: "", SortBy: "id", OrderBy: "desc", Page: 1, Limit: 50}
+}
+
+func (l list) validate() error {
+	return validation.ValidateStruct(&l,
+		validation.Field(&l.Favorite, validation.In("0", "1", "true", "false")),
+		validation.Field(&l.AccessLevel, validation.In("0", "1")),
+		validation.Field(&l.Title, validation.Length(0, 100)),
+		validation.Field(&l.SortBy, validation.In("id")),
+		validation.Field(&l.OrderBy, validation.In("asc", "desc")),
+		validation.Field(&l.Page, validation.Min(1)),
+		validation.Field(&l.Limit, validation.Min(1), validation.Max(100)),
 	)
 }
 
-type CreateSnippetRequest struct {
-	Favorite      bool      `from:"favorite"`
-	Access        int       `from:"access"`
-	Title         string    `from:"title"`
-	Content       null.String    `from:"content"`
-	FileExtension string    `from:"file_extension"`
-	EditorOptions struct{}  `from:"editor_options"`
-	CreatedAt     time.Time `from:"created_at"`
-	UpdatedAt     time.Time `from:"updated_at"`
-
+type snippet struct {
+	Favorite            datatype.FlexibleBool      `json:"favorite"`
+	AccessLevel         int                        `json:"access_level"`
+	Title               string                     `json:"title"`
+	Content             string                     `json:"content"`
+	Language            string                     `json:"language"`
+	CustomEditorOptions entity.CustomEditorOptions `json:"custom_editor_options"`
 }
 
-func NewCreateSnippetRequest() CreateSnippetRequest {
-	return CreateSnippetRequest{Title: ""}
-}
-
-func (r CreateSnippetRequest) Validate() error {
-	return validation.ValidateStruct(&r,
-		validation.Field(&r.Favorite, validation.Min(0), validation.Max(1)),
-		validation.Field(&r.Access, validation.Min(0), validation.Max(1)),
-		validation.Field(&r.Title, validation.Length(0, 50)),
-	)
-}
-
-type UpdateSnippetRequest struct {
-	Favorite      bool      `from:"favorite"`
-	Access        int       `from:"access"`
-	Title         string    `from:"title"`
-	Content       string    `from:"content"`
-	FileExtension string    `from:"file_extension"`
-	EditorOptions struct{}  `from:"editor_options"`
-	CreatedAt     time.Time `from:"created_at"`
-	UpdatedAt     time.Time `from:"updated_at"`
-
-}
-
-func NewUpdateSnippetRequest() UpdateSnippetRequest {
-	return UpdateSnippetRequest{Title: ""}
-}
-
-func (r UpdateSnippetRequest) Validate() error {
-	return validation.ValidateStruct(&r,
-		validation.Field(&r.Favorite, validation.Min(0), validation.Max(1)),
-		validation.Field(&r.Access, validation.Min(0), validation.Max(1)),
-		validation.Field(&r.Title, validation.Length(0, 50)),
-	)
+func (r snippet) validate() error {
+	err := validation.Errors{
+		"title":                      validation.Validate(r.Title, validation.Required, validation.Length(1, 500)),
+		"access_level":               validation.Validate(r.AccessLevel, validation.In(0, 1)),
+		"editor_options.theme":       validation.Validate(r.CustomEditorOptions.Theme, validation.In("default")),
+		"editor_options.font_family": validation.Validate(r.CustomEditorOptions.FontFamily, validation.In("default")),
+	}.Filter()
+	return err
 }

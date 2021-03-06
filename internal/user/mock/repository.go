@@ -20,11 +20,11 @@ func NewRepository(items []entity.User) UserMemoryRepository {
 	return r
 }
 
-func (r UserMemoryRepository) List(context context.Context, limit int, offset int) ([]entity.User, error) {
+func (r UserMemoryRepository) List(ctx context.Context, limit int, offset int) ([]entity.User, error) {
 	return r.items, nil
 }
 
-func (r UserMemoryRepository) FindByID(context context.Context, id int) (entity.User, error) {
+func (r UserMemoryRepository) GetByID(ctx context.Context, id int) (entity.User, error) {
 	var user entity.User
 	for i, item := range r.items {
 		if item.ID == id {
@@ -34,7 +34,7 @@ func (r UserMemoryRepository) FindByID(context context.Context, id int) (entity.
 	return user, sql.ErrNoRows
 }
 
-func (r UserMemoryRepository) Create(context context.Context, user entity.User) (entity.User, error) {
+func (r UserMemoryRepository) Create(ctx context.Context, user entity.User) (entity.User, error) {
 	if user.Login == "error" {
 		return entity.User{}, errorRepository
 	}
@@ -42,7 +42,7 @@ func (r UserMemoryRepository) Create(context context.Context, user entity.User) 
 	return user, nil
 }
 
-func (r UserMemoryRepository) Update(context context.Context, user entity.User) error {
+func (r UserMemoryRepository) Update(ctx context.Context, user entity.User) error {
 	if user.Login == "error" {
 		return errorRepository
 	}
@@ -55,7 +55,7 @@ func (r UserMemoryRepository) Update(context context.Context, user entity.User) 
 	return nil
 }
 
-func (r UserMemoryRepository) Delete(context context.Context, id int) error {
+func (r UserMemoryRepository) Delete(ctx context.Context, id int) error {
 	for i, item := range r.items {
 		if item.ID == id {
 			r.items[i] = r.items[len(r.items)-1]
@@ -66,6 +66,6 @@ func (r UserMemoryRepository) Delete(context context.Context, id int) error {
 	return nil
 }
 
-func (r UserMemoryRepository) Count(context context.Context) (int, error) {
+func (r UserMemoryRepository) Count(ctx context.Context) (int, error) {
 	return len(r.items), nil
 }

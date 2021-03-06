@@ -2,23 +2,22 @@ package snippet
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
+	"github.com/dd3v/snippets.page.backend/pkg/query"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 )
 
-//Repository - ...
 type Repository interface {
-	GetByUserID(context context.Context, userID int, limit int, offset int, conditions map[string]interface{}) ([]entity.Snippet, error)
-	GetByIDAndUserID(context context.Context, ID int, UserID int) (entity.Snippet, error)
-	Query(context context.Context, limit int, offset int, conditions map[string]interface{}) ([]entity.Snippet, error)
-	FindByID(context context.Context, id int) (entity.Snippet, error)
-	Create(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
-	Update(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
-	Delete(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
-	Count(context context.Context) (int, error)
+	List(context.Context, int, map[string]string, query.Sort, query.Pagination) ([]entity.Snippet, error)
+	GetByID(ctx context.Context, id int) (entity.Snippet, error)
+	Create(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error)
+	Update(ctx context.Context, snippet entity.Snippet) error
+	Delete(ctx context.Context, snippet entity.Snippet) error
+	Count(ctx context.Context, userID int, filter map[string]string) (int, error)
 }
 
 type repository struct {
@@ -32,61 +31,69 @@ func NewRepository(db *dbcontext.DB) Repository {
 	}
 }
 
-func (r repository) GetByIDAndUserID(context context.Context, ID int, UserID int) (entity.Snippet, error) {
+func (r repository) GetByID(ctx context.Context, id int) (entity.Snippet, error) {
 	var snippet entity.Snippet
-	err := r.db.With(context).Select().Where(dbx.HashExp{"id": ID, "user_id": UserID}).One(&snippet)
+	err := r.db.With(ctx).Select().Where(dbx.HashExp{"id": id}).One(&snippet)
 	return snippet, err
 }
 
-func (r repository) GetByUserID(ctx context.Context, userID int, limit int, offset int, conditions map[string]interface{}) ([]entity.Snippet, error) {
+func (r repository) List(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
 	var snippets []entity.Snippet
-	query := r.db.With(ctx).Select().Limit(int64(limit)).Offset(int64(offset)).Where(dbx.HashExp{"user_id": userID})
-	if access, exists := conditions["access"]; exists {
-		query.AndWhere(dbx.HashExp{"access": access})
+	query := r.db.With(ctx).Select().Where(dbx.HashExp{"user_id": userID})
+	query.Limit(int64(pagination.GetLimit())).Offset(int64(pagination.GetOffset()))
+	for field, value := range filter {
+		expression, err := r.buildExpression(field, value)
+		if err != nil {
+			return snippets, err
+		}
+		query.AndWhere(expression)
 	}
-	if favorite, exists := conditions["favorite"]; exists {
-		query.AndWhere(dbx.HashExp{"favorite": favorite})
-	}
-	if title, exists := conditions["title"]; exists {
-		query.AndWhere(dbx.Like("title", title.(string)))
-	}
+	query.OrderBy(sort.GetSortBy() + " " + sort.GetOrderBy())
 	err := query.All(&snippets)
 	return snippets, err
 }
 
-func (r repository) Query(context context.Context, limit int, offset int, conditions map[string]interface{}) ([]entity.Snippet, error) {
-	var snippets []entity.Snippet
-
-	fmt.Println(conditions)
-
-	err := r.db.With(context).Select().Limit(int64(limit)).Offset(int64(offset)).All(&snippets)
-
-	return snippets, err
-}
-
-func (r repository) FindByID(context context.Context, id int) (entity.Snippet, error) {
-	var snippet entity.Snippet
-	err := r.db.With(context).Select().Model(id, &snippet)
+func (r repository) Create(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error) {
+	err := r.db.With(ctx).Model(&snippet).Insert()
 	return snippet, err
 }
 
-func (r repository) Create(context context.Context, snippet entity.Snippet) (entity.Snippet, error) {
-	err := r.db.With(context).Model(&snippet).Insert()
-	return snippet, err
+func (r repository) Update(ctx context.Context, snippet entity.Snippet) error {
+	return r.db.With(ctx).Model(&snippet).Exclude("UserID", "CreatedAt").Update()
 }
 
-func (r repository) Update(context context.Context, snippet entity.Snippet) (entity.Snippet, error) {
-	err := r.db.With(context).Model(&snippet).Update()
-	return snippet, err
+func (r repository) Delete(ctx context.Context, snippet entity.Snippet) error {
+	return r.db.With(ctx).Model(&snippet).Delete()
 }
 
-func (r repository) Delete(context context.Context, snippet entity.Snippet) (entity.Snippet, error) {
-	err := r.db.With(context).Model(&snippet).Delete()
-	return snippet, err
-}
-
-func (r repository) Count(context context.Context) (int, error) {
+func (r repository) Count(ctx context.Context, userID int, filter map[string]string) (int, error) {
 	var count int
-	err := r.db.With(context).Select("COUNT(*)").From("snippets").Row(&count)
+	query := r.db.With(ctx).Select("COUNT(*)").From("snippets").Where(dbx.HashExp{"user_id": userID})
+	for field, value := range filter {
+		expression, err := r.buildExpression(field, value)
+		if err != nil {
+			return 0, err
+		}
+		query.AndWhere(expression)
+	}
+	err := query.Row(&count)
 	return count, err
+}
+
+func (r repository) buildExpression(key string, value string) (dbx.Expression, error) {
+	var expression dbx.Expression
+	var err error
+	switch key {
+	case "favorite", "access_level":
+		fmt.Println("HERE")
+		expression = dbx.HashExp{key: value}
+		break
+	case "title":
+		expression = dbx.NewExp("MATCH (title,content) AGAINST ({:keywords} IN BOOLEAN MODE)", dbx.Params{"keywords": value + "*"})
+		break
+	default:
+		err = errors.New("Undefined filter key")
+		break
+	}
+	return expression, err
 }

@@ -9,12 +9,12 @@ import (
 
 //Repository - ...
 type Repository interface {
-	List(context context.Context, limit int, offset int) ([]entity.User, error)
-	FindByID(context context.Context, id int) (entity.User, error)
-	Create(context context.Context, user entity.User) (entity.User, error)
-	Update(context context.Context, user entity.User) error
-	Delete(context context.Context, id int) error
-	Count(context context.Context) (int, error)
+	List(ctx context.Context, limit int, offset int) ([]entity.User, error)
+	GetByID(ctx context.Context, id int) (entity.User, error)
+	Create(ctx context.Context, user entity.User) (entity.User, error)
+	Update(ctx context.Context, user entity.User) error
+	Delete(ctx context.Context, id int) error
+	Count(ctx context.Context) (int, error)
 }
 
 type repository struct {
@@ -28,37 +28,37 @@ func NewRepository(db *dbcontext.DB) Repository {
 	}
 }
 
-func (r repository) List(context context.Context, limit int, offset int) ([]entity.User, error) {
+func (r repository) List(ctx context.Context, limit int, offset int) ([]entity.User, error) {
 	var users []entity.User
-	err := r.db.With(context).Select().Limit(int64(limit)).Offset(int64(offset)).OrderBy("id").All(&users)
+	err := r.db.With(ctx).Select().Limit(int64(limit)).Offset(int64(offset)).OrderBy("id").All(&users)
 	return users, err
 }
 
-func (r repository) FindByID(context context.Context, id int) (entity.User, error) {
+func (r repository) GetByID(ctx context.Context, id int) (entity.User, error) {
 	var user entity.User
-	err := r.db.With(context).Select().Model(id, &user)
+	err := r.db.With(ctx).Select().Model(id, &user)
 	return user, err
 }
 
-func (r repository) Create(context context.Context, user entity.User) (entity.User, error) {
-	err := r.db.With(context).Model(&user).Insert()
+func (r repository) Create(ctx context.Context, user entity.User) (entity.User, error) {
+	err := r.db.With(ctx).Model(&user).Insert()
 	return user, err
 }
 
-func (r repository) Update(context context.Context, user entity.User) error {
-	return r.db.With(context).Model(&user).Update()
+func (r repository) Update(ctx context.Context, user entity.User) error {
+	return r.db.With(ctx).Model(&user).Update()
 }
 
-func (r repository) Delete(context context.Context, id int) error {
-	user, err := r.FindByID(context, id)
+func (r repository) Delete(ctx context.Context, id int) error {
+	user, err := r.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
-	return r.db.With(context).Model(&user).Delete()
+	return r.db.With(ctx).Model(&user).Delete()
 }
 
-func (r repository) Count(context context.Context) (int, error) {
+func (r repository) Count(ctx context.Context) (int, error) {
 	var count int
-	err := r.db.With(context).Select("COUNT(*)").From("users").Row(&count)
+	err := r.db.With(ctx).Select("COUNT(*)").From("users").Row(&count)
 	return count, err
 }

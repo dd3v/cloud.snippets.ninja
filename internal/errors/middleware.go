@@ -8,7 +8,7 @@ import (
 
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/lib/pq"
+	"github.com/go-sql-driver/mysql"
 )
 
 //Handler - error handler HTTP middleware
@@ -35,11 +35,9 @@ func buildResponseWithError(err error) ErrorResponse {
 		return err.(ErrorResponse)
 	case validation.Errors:
 		return GenerateValidationError(err.(validation.Errors))
-	case *pq.Error:
-		if pgerr, ok := err.(*pq.Error); ok {
-			if pgerr.Code == "23505" {
-				return BadRequest(pgerr.Message)
-			}
+	case *mysql.MySQLError:
+		if mysql, ok := err.(*mysql.MySQLError); ok {
+			return BadRequest(mysql.Message)
 		}
 	case routing.HTTPError:
 		switch err.(routing.HTTPError).StatusCode() {

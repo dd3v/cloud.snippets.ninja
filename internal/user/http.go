@@ -43,7 +43,7 @@ func (r resource) create(c *routing.Context) error {
 
 func (r resource) me(c *routing.Context) error {
 	identity := c.Request.Context().Value(entity.JWTContextKey).(entity.Identity)
-	me, err := r.service.FindByID(c.Request.Context(), identity.GetID())
+	me, err := r.service.GetByID(c.Request.Context(), identity.GetID())
 	if err != nil {
 		return err
 	}
@@ -55,7 +55,7 @@ func (r resource) get(c *routing.Context) error {
 	if err != nil {
 		return err
 	}
-	user, err := r.service.FindByID(c.Request.Context(), id)
+	user, err := r.service.GetByID(c.Request.Context(), id)
 	if err != nil {
 		return err
 	}

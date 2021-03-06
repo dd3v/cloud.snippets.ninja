@@ -2,95 +2,84 @@ package snippet
 
 import (
 	"context"
-	"time"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
+	"github.com/dd3v/snippets.page.backend/pkg/query"
 )
 
-type SearchRequest struct {
-	Keyword  string
-	Favorite bool
-}
-
 type Service interface {
-	FindByUserID(context context.Context, userID int, request OwnSnippetsRequest) ([]entity.Snippet, error)
-	FindByID(context context.Context, id int) (entity.Snippet, error)
-	Create(context context.Context, userID int, request CreateSnippetRequest) (entity.Snippet, error)
-	Update(context context.Context, id int, userID int, request UpdateSnippetRequest) (entity.Snippet, error)
-	Delete(context context.Context, id int, userID int) (entity.Snippet, error)
-	Count(context context.Context) (int, error)
+	GetByID(ctx context.Context, id int) (entity.Snippet, error)
+	Query(context.Context, map[string]string, query.Sort, query.Pagination) ([]entity.Snippet, error)
+	Create(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
+	Update(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
+	Delete(context context.Context, id int) error
+	Count(context context.Context, filter map[string]string) (int, error)
+}
+type RBAC interface {
+	CanViewSnippet(ctx context.Context, snippet entity.Snippet) error
+	CanDeleteSnippet(ctx context.Context, snippet entity.Snippet) error
+	CanUpdateSnippet(ctx context.Context, snippet entity.Snippet) error
 }
 
 type service struct {
 	repository Repository
+	rbac       RBAC
 }
 
 //NewService - ...
-func NewService(repository Repository) Service {
+func NewService(repository Repository, rbac RBAC) Service {
 	return service{
 		repository: repository,
+		rbac:       rbac,
 	}
 }
 
-func (s service) FindByUserID(context context.Context, userID int, request OwnSnippetsRequest) ([]entity.Snippet, error) {
-	conditions := map[string]interface{}{}
-	if request.Access != -1 {
-		conditions["access"] = request.Access
+func (s service) GetByID(ctx context.Context, id int) (entity.Snippet, error) {
+	snippet, err := s.repository.GetByID(ctx, id)
+	if err != nil {
+		return entity.Snippet{}, err
 	}
-	if request.Title != "" {
-		conditions["title"] = request.Title
+	if err := s.rbac.CanViewSnippet(ctx, snippet); err != nil {
+		return entity.Snippet{}, err
 	}
-	if request.Favorite != -1 {
-		conditions["favorite"] = request.Favorite
-	}
-	snippets, err := s.repository.GetByUserID(context, userID, request.Limit, request.Offset, conditions)
+	return snippet, err
+}
+
+func (s service) Query(ctx context.Context, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
+	identity := ctx.Value(entity.JWTContextKey).(entity.Identity)
+	snippets, err := s.repository.List(ctx, identity.GetID(), filter, sort, pagination)
 	return snippets, err
 }
 
-func (s service) Create(context context.Context, userID int, request CreateSnippetRequest) (entity.Snippet, error) {
-	return s.repository.Create(context, entity.Snippet{
-		UserID:        userID,
-		Favorite:      request.Favorite,
-		Access:        request.Access,
-		Title:         request.Title,
-		Content:       request.Content,
-		FileExtension: request.FileExtension,
-		EditorOptions: request.EditorOptions,
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
-	})
+func (s service) Create(context context.Context, snippet entity.Snippet) (entity.Snippet, error) {
+	return s.repository.Create(context, snippet)
 }
 
-func (s service) Update(context context.Context, id int, userID int, request UpdateSnippetRequest) (entity.Snippet, error) {
-	snippet, err := s.repository.GetByIDAndUserID(context, id, userID)
+func (s service) Update(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error) {
+	record, err := s.repository.GetByID(ctx, snippet.ID)
 	if err != nil {
-		return snippet,err
+		return snippet, err
 	}
-	snippet.Favorite = request.Favorite
-	snippet.Access = request.Access
-	snippet.Title = request.Title
-	snippet.Content.String = request.Content
-	snippet.FileExtension = request.FileExtension
-	snippet.EditorOptions = request.EditorOptions
-	snippet.UpdatedAt = time.Now()
+	if err := s.rbac.CanUpdateSnippet(ctx, record); err != nil {
 
-	return s.repository.Update(context, snippet)
+		return entity.Snippet{}, err
+	}
+	record.Load(snippet)
+	return snippet, s.repository.Update(ctx, record)
 }
 
-func (s service) FindByID(context context.Context, id int) (entity.Snippet, error) {
-	return s.repository.FindByID(context, id)
-}
-
-func (s service) Delete(context context.Context, id int, userID int) (entity.Snippet, error) {
-
-	snippet, err := s.repository.GetByIDAndUserID(context, id, userID)
+func (s service) Delete(ctx context.Context, id int) error {
+	snippet, err := s.repository.GetByID(ctx, id)
 	if err != nil {
-		return snippet,err
+		return err
 	}
-
-	return s.repository.Delete(context, snippet)
+	if err := s.rbac.CanDeleteSnippet(ctx, snippet); err != nil {
+		return err
+	}
+	return s.repository.Delete(ctx, snippet)
 }
 
-func (s service) Count(context context.Context) (int, error) {
-	return s.repository.Count(context)
+func (s service) Count(ctx context.Context, filter map[string]string) (int, error) {
+	identity := ctx.Value(entity.JWTContextKey).(entity.Identity)
+	return s.repository.Count(ctx, identity.GetID(), filter)
 }

@@ -10,10 +10,10 @@ import (
 
 //Repository - ...
 type Repository interface {
-	FindUser(context context.Context, login string) (entity.User, error)
-	CreateSession(context context.Context, session entity.Session) error
-	FindSessionByRefreshToken(context context.Context, refreshToken string) (entity.Session, error)
-	DeleteSessionByRefreshToken(context context.Context, refreshToken string) error
+	FindUserByLoginOrEmail(ctx context.Context, login string) (entity.User, error)
+	CreateSession(ctx context.Context, session entity.Session) error
+	FindSessionByRefreshToken(ctx context.Context, refreshToken string) (entity.Session, error)
+	DeleteSessionByRefreshToken(ctx context.Context, refreshToken string) error
 }
 
 type repository struct {
@@ -27,26 +27,26 @@ func NewRepository(db *dbcontext.DB) Repository {
 	}
 }
 
-func (r repository) FindUser(context context.Context, login string) (entity.User, error) {
+func (r repository) FindUserByLoginOrEmail(ctx context.Context, value string) (entity.User, error) {
 	var user entity.User
-	err := r.db.With(context).Select().From("users").Where(dbx.HashExp{"login": login}).OrWhere(dbx.HashExp{"email": login}).One(&user)
+	err := r.db.With(ctx).Select().From("users").Where(dbx.HashExp{"login": value}).OrWhere(dbx.HashExp{"email": value}).One(&user)
 	return user, err
 }
 
-func (r repository) CreateSession(context context.Context, session entity.Session) error {
-	return r.db.With(context).Model(&session).Insert()
+func (r repository) CreateSession(ctx context.Context, session entity.Session) error {
+	return r.db.With(ctx).Model(&session).Insert()
 }
 
-func (r repository) FindSessionByRefreshToken(context context.Context, refreshToken string) (entity.Session, error) {
+func (r repository) FindSessionByRefreshToken(ctx context.Context, refreshToken string) (entity.Session, error) {
 	var session entity.Session
-	err := r.db.With(context).Select().Where(&dbx.HashExp{"refresh_token": refreshToken}).One(&session)
+	err := r.db.With(ctx).Select().Where(&dbx.HashExp{"refresh_token": refreshToken}).One(&session)
 	return session, err
 }
 
-func (r repository) DeleteSessionByRefreshToken(context context.Context, refreshToken string) error {
-	session, err := r.FindSessionByRefreshToken(context, refreshToken)
+func (r repository) DeleteSessionByRefreshToken(ctx context.Context, refreshToken string) error {
+	session, err := r.FindSessionByRefreshToken(ctx, refreshToken)
 	if err != nil {
 		return err
 	}
-	return r.db.With(context).Model(&session).Delete()
+	return r.db.With(ctx).Model(&session).Delete()
 }

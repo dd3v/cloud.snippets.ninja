@@ -53,7 +53,6 @@ func TestCreateRequestValidation(t *testing.T) {
 			true,
 		},
 	}
-
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.model.Validate()
@@ -90,7 +89,6 @@ func TestUpdateRequestValidation(t *testing.T) {
 			true,
 		},
 	}
-
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			err := tc.model.Validate()
