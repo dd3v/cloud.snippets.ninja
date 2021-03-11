@@ -23,12 +23,12 @@ type Snippet struct {
 }
 
 type CustomEditorOptions struct {
-	Theme       string `json:"theme"`
-	LineNumbers bool   `json:"line_numbers"`
-	WordWrap    bool   `json:"word_wrap"`
-	Folding     bool   `json:"folding"`
-	Minimap     bool   `json:"minimap"`
-	FontFamily  string `json:"font_family"`
+	Theme       string `json:"theme,omitempty"`
+	LineNumbers bool   `json:"line_numbers,omitempty"`
+	WordWrap    bool   `json:"word_wrap,omitempty"`
+	Folding     bool   `json:"folding,omitempty"`
+	Minimap     bool   `json:"minimap,omitempty"`
+	FontFamily  string `json:"font_family,omitempty"`
 }
 
 func (pc *CustomEditorOptions) Scan(val interface{}) error {

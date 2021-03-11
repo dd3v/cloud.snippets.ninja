@@ -18,7 +18,7 @@ CREATE TABLE `snippets` (
   `title` varchar(500) NOT NULL,
   `content` text,
   `language` varchar(20) NOT NULL,
-  `custom_editor_options` json DEFAULT NULL,
+  `custom_editor_options` json NOT NULL,
   `created_at` datetime NOT NULL,
   `updated_at` datetime NOT NULL,
   PRIMARY KEY (`id`)

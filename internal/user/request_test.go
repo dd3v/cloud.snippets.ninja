@@ -8,9 +8,9 @@ import (
 
 func TestCreateRequestValidation(t *testing.T) {
 	cases := []struct {
-		name  string
-		model CreateRequest
-		fail  bool
+		name    string
+		request CreateRequest
+		fail    bool
 	}{
 		{
 			"success",
@@ -55,7 +55,7 @@ func TestCreateRequestValidation(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.model.Validate()
+			err := tc.request.Validate()
 			assert.Equal(t, tc.fail, err != nil)
 		})
 	}
@@ -63,9 +63,9 @@ func TestCreateRequestValidation(t *testing.T) {
 
 func TestUpdateRequestValidation(t *testing.T) {
 	cases := []struct {
-		name  string
-		model UpdateRequest
-		fail  bool
+		name    string
+		request UpdateRequest
+		fail    bool
 	}{
 		{
 			"success",
@@ -91,7 +91,7 @@ func TestUpdateRequestValidation(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.model.Validate()
+			err := tc.request.Validate()
 			assert.Equal(t, tc.fail, err != nil)
 		})
 	}

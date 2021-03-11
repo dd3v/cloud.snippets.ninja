@@ -1,6 +1,7 @@
 package snippet
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -127,12 +128,14 @@ func (r resource) list(c *routing.Context) error {
 	if err := request.validate(); err != nil {
 		return err
 	}
+	fmt.Printf("%+v\n", request)
+
 	filter := request.filterConditions()
 	total, err := r.service.Count(c.Request.Context(), filter)
 	if err != nil {
 		return err
 	}
-	pagination := query.NewPagination(request.Page, request.Limit, total)
+	pagination := query.NewPagination(request.Page, request.Limit)
 	sort := query.NewSort(request.SortBy, request.OrderBy)
 	snippets, err := r.service.Query(c.Request.Context(), filter, sort, pagination)
 	if err != nil {
@@ -143,6 +146,6 @@ func (r resource) list(c *routing.Context) error {
 		Page:       pagination.GetPage(),
 		Limit:      pagination.GetLimit(),
 		TotalItems: total,
-		TotalPages: pagination.GetTotalPages(),
+		TotalPages: (total + pagination.GetLimit() - 1) / pagination.GetLimit(),
 	})
 }

@@ -1,14 +1,16 @@
 package snippet
 
 import (
+	"strconv"
+
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/pkg/datatype"
 	validation "github.com/go-ozzo/ozzo-validation"
 )
 
 type list struct {
-	Favorite    string `form:"favorite"`
-	AccessLevel string `form:"access_level"`
+	Favorite    bool   `form:"favorite"`
+	AccessLevel int    `form:"access_level"`
 	Title       string `form:"title"`
 	SortBy      string `form:"sort_by"`
 	OrderBy     string `form:"order_by"`
@@ -18,11 +20,11 @@ type list struct {
 
 func (l list) filterConditions() map[string]string {
 	conditions := make(map[string]string)
-	if l.Favorite != "" {
-		conditions["favorite"] = l.Favorite
+	if l.Favorite != false {
+		conditions["favorite"] = "1"
 	}
-	if l.AccessLevel != "" {
-		conditions["favorite"] = l.AccessLevel
+	if l.AccessLevel != -1 {
+		conditions["access_level"] = strconv.Itoa(l.AccessLevel)
 	}
 	if l.Title != "" {
 		conditions["title"] = l.Title
@@ -31,13 +33,13 @@ func (l list) filterConditions() map[string]string {
 }
 
 func newList() list {
-	return list{Favorite: "", AccessLevel: "", Title: "", SortBy: "id", OrderBy: "desc", Page: 1, Limit: 50}
+	return list{Favorite: false, AccessLevel: -1, Title: "", SortBy: "id", OrderBy: "desc", Page: 1, Limit: 50}
 }
 
 func (l list) validate() error {
 	return validation.ValidateStruct(&l,
-		validation.Field(&l.Favorite, validation.In("0", "1", "true", "false")),
-		validation.Field(&l.AccessLevel, validation.In("0", "1")),
+		validation.Field(&l.Favorite, validation.In(0, 1, false, true)),
+		validation.Field(&l.AccessLevel, validation.In(-1, 0, 1)),
 		validation.Field(&l.Title, validation.Length(0, 100)),
 		validation.Field(&l.SortBy, validation.In("id")),
 		validation.Field(&l.OrderBy, validation.In("asc", "desc")),

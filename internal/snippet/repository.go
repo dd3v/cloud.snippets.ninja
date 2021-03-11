@@ -3,7 +3,6 @@ package snippet
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
@@ -84,8 +83,7 @@ func (r repository) buildExpression(key string, value string) (dbx.Expression, e
 	var expression dbx.Expression
 	var err error
 	switch key {
-	case "favorite", "access_level":
-		fmt.Println("HERE")
+	case "favorite", "access_level", "language":
 		expression = dbx.HashExp{key: value}
 		break
 	case "title":
