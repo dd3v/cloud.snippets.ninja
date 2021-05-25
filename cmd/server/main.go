@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/dd3v/snippets.page.backend/internal/rbac"
 	"log"
 	"net/http"
 	"os"
@@ -14,7 +15,6 @@ import (
 	"github.com/dd3v/snippets.page.backend/internal/auth"
 	"github.com/dd3v/snippets.page.backend/internal/config"
 	"github.com/dd3v/snippets.page.backend/internal/errors"
-	"github.com/dd3v/snippets.page.backend/internal/rbac"
 	"github.com/dd3v/snippets.page.backend/internal/snippet"
 	"github.com/dd3v/snippets.page.backend/internal/user"
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
@@ -47,7 +47,8 @@ func main() {
 	}()
 	db := dbcontext.New(mysql)
 	rbac := rbac.New()
-	jwtAuthHandler := auth.Handler(config.JWTSigningKey)
+
+	jwtAuthMiddleware := auth.GetJWTMiddleware(config.JWTSigningKey)
 	router := routing.New()
 	router.Use(
 		content.TypeNegotiator(content.JSON),
@@ -56,9 +57,9 @@ func main() {
 	apiGroup := router.Group("/api")
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
-	user.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, userService)
-	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, auth.NewService(config.JWTSigningKey, auth.NewRepository(db)))
-	snippet.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthHandler, snippet.NewService(
+	user.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, userService)
+	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, auth.NewService(config.JWTSigningKey, auth.NewRepository(db)))
+	snippet.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, snippet.NewService(
 		snippet.NewRepository(db),
 		rbac,
 	))

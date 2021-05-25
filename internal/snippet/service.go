@@ -9,16 +9,17 @@ import (
 
 type Service interface {
 	GetByID(ctx context.Context, id int) (entity.Snippet, error)
-	Query(context.Context, map[string]string, query.Sort, query.Pagination) ([]entity.Snippet, error)
+	QueryByUserID(context.Context, int, map[string]string, query.Sort, query.Pagination) ([]entity.Snippet, error)
 	Create(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
 	Update(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
 	Delete(context context.Context, id int) error
-	Count(context context.Context, filter map[string]string) (int, error)
+	CountByUserID(context context.Context, userID int, filter map[string]string) (int, error)
 }
 type RBAC interface {
 	CanViewSnippet(ctx context.Context, snippet entity.Snippet) error
 	CanDeleteSnippet(ctx context.Context, snippet entity.Snippet) error
 	CanUpdateSnippet(ctx context.Context, snippet entity.Snippet) error
+	GetUserID(ctx context.Context) int
 }
 
 type service struct {
@@ -45,9 +46,8 @@ func (s service) GetByID(ctx context.Context, id int) (entity.Snippet, error) {
 	return snippet, err
 }
 
-func (s service) Query(ctx context.Context, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
-	identity := ctx.Value(entity.JWTContextKey).(entity.Identity)
-	snippets, err := s.repository.List(ctx, identity.GetID(), filter, sort, pagination)
+func (s service) QueryByUserID(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
+	snippets, err := s.repository.QueryByUserID(ctx, userID, filter, sort, pagination)
 	return snippets, err
 }
 
@@ -58,14 +58,17 @@ func (s service) Create(context context.Context, snippet entity.Snippet) (entity
 func (s service) Update(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error) {
 	record, err := s.repository.GetByID(ctx, snippet.ID)
 	if err != nil {
-		return snippet, err
+		return entity.Snippet{}, err
 	}
 	if err := s.rbac.CanUpdateSnippet(ctx, record); err != nil {
-
 		return entity.Snippet{}, err
 	}
 	record.Load(snippet)
-	return snippet, s.repository.Update(ctx, record)
+	err = s.repository.Update(ctx, record)
+	if err != nil {
+		return entity.Snippet{}, err
+	}
+	return snippet, err
 }
 
 func (s service) Delete(ctx context.Context, id int) error {
@@ -79,7 +82,6 @@ func (s service) Delete(ctx context.Context, id int) error {
 	return s.repository.Delete(ctx, snippet)
 }
 
-func (s service) Count(ctx context.Context, filter map[string]string) (int, error) {
-	identity := ctx.Value(entity.JWTContextKey).(entity.Identity)
-	return s.repository.Count(ctx, identity.GetID(), filter)
+func (s service) CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error) {
+	return s.repository.CountByUserID(ctx, userID, filter)
 }

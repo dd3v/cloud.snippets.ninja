@@ -4,7 +4,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -45,7 +44,6 @@ func TestRepositoryCreate(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, err := r.Create(context.TODO(), tc.entity)
-			fmt.Println("goooo")
 			assert.Equal(t, tc.fail, err != nil)
 		})
 	}

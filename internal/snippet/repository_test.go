@@ -12,7 +12,6 @@ import (
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
 	"github.com/dd3v/snippets.page.backend/pkg/query"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/guregu/null.v4"
 )
 
 var db *dbcontext.DB
@@ -33,7 +32,7 @@ func TestRepository_Create(t *testing.T) {
 		Favorite:            false,
 		AccessLevel:         0,
 		Title:               "Test Snippet",
-		Content:             null.NewString("Hello world", true),
+		Content:             "",
 		Language:            "txt",
 		CustomEditorOptions: entity.CustomEditorOptions{},
 		CreatedAt:           time.Now(),
@@ -58,7 +57,7 @@ func TestRepository_Update(t *testing.T) {
 		Favorite:    true,
 		AccessLevel: 1,
 		Title:       "New title",
-		Content:     null.NewString("New Text", true),
+		Content:     "New text",
 		Language:    "php",
 		CustomEditorOptions: entity.CustomEditorOptions{
 			Theme: "default",
@@ -104,7 +103,7 @@ func TestRepository_List(t *testing.T) {
 			Favorite:            true,
 			AccessLevel:         0,
 			Title:               "Binary Search",
-			Content:             null.NewString("", true),
+			Content:             "",
 			Language:            "php",
 			CustomEditorOptions: entity.CustomEditorOptions{},
 			CreatedAt:           time.Now(),
@@ -115,7 +114,7 @@ func TestRepository_List(t *testing.T) {
 			Favorite:            true,
 			AccessLevel:         0,
 			Title:               "Linear search",
-			Content:             null.NewString("", true),
+			Content:             "",
 			Language:            "js",
 			CustomEditorOptions: entity.CustomEditorOptions{},
 			CreatedAt:           time.Now(),
@@ -126,7 +125,7 @@ func TestRepository_List(t *testing.T) {
 			Favorite:            false,
 			AccessLevel:         1,
 			Title:               "Bubble sort",
-			Content:             null.NewString("", true),
+			Content:             "",
 			Language:            "go",
 			CustomEditorOptions: entity.CustomEditorOptions{},
 			CreatedAt:           time.Now(),

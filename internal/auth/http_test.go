@@ -73,7 +73,7 @@ func TestEndpoints(t *testing.T) {
 	mockRepository := mock.NewRepository(users, sessions)
 	service := NewService("test", mockRepository)
 	router := test.MockRouter()
-	NewHTTPHandler(router.Group(""), test.MockAuthHandler, service)
+	NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
 	for _, tc := range cases {
 		test.Endpoint(t, router, tc)
 	}

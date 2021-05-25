@@ -3,7 +3,7 @@ package entity
 type contextValue string
 
 const (
-	JWTContextKey contextValue = "jwt"
+	JWTCtxKey contextValue = "jwt"
 )
 
 type Identity struct {

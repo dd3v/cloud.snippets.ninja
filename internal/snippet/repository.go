@@ -11,12 +11,12 @@ import (
 )
 
 type Repository interface {
-	List(context.Context, int, map[string]string, query.Sort, query.Pagination) ([]entity.Snippet, error)
+	QueryByUserID(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error)
 	GetByID(ctx context.Context, id int) (entity.Snippet, error)
 	Create(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error)
 	Update(ctx context.Context, snippet entity.Snippet) error
 	Delete(ctx context.Context, snippet entity.Snippet) error
-	Count(ctx context.Context, userID int, filter map[string]string) (int, error)
+	CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error)
 }
 
 type repository struct {
@@ -36,7 +36,7 @@ func (r repository) GetByID(ctx context.Context, id int) (entity.Snippet, error)
 	return snippet, err
 }
 
-func (r repository) List(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
+func (r repository) QueryByUserID(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
 	var snippets []entity.Snippet
 	query := r.db.With(ctx).Select().Where(dbx.HashExp{"user_id": userID})
 	query.Limit(int64(pagination.GetLimit())).Offset(int64(pagination.GetOffset()))
@@ -65,7 +65,7 @@ func (r repository) Delete(ctx context.Context, snippet entity.Snippet) error {
 	return r.db.With(ctx).Model(&snippet).Delete()
 }
 
-func (r repository) Count(ctx context.Context, userID int, filter map[string]string) (int, error) {
+func (r repository) CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error) {
 	var count int
 	query := r.db.With(ctx).Select("COUNT(*)").From("snippets").Where(dbx.HashExp{"user_id": userID})
 	for field, value := range filter {

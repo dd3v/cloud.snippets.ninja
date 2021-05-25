@@ -29,7 +29,7 @@ func TestUserEndpoint(t *testing.T) {
 			Body:         `{"login":"test", "email": "test@gmail.com", "password": "qwerty", "repeat_password": "qwerty"}`,
 			Header:       nil,
 			WantStatus:   http.StatusCreated,
-			WantResponse: `*test*`,
+			WantResponse: "*test*",
 		},
 		{
 			Name:         "create new user - validation error",
@@ -38,7 +38,7 @@ func TestUserEndpoint(t *testing.T) {
 			Body:         `{"login":"a", "email": "test@gmail.com", "password": "qwerty", "repeat_password": "qwerty"}`,
 			Header:       nil,
 			WantStatus:   http.StatusBadRequest,
-			WantResponse: `*Validation error*`,
+			WantResponse: "*Validation error*",
 		},
 		//auth token
 		{
@@ -66,7 +66,7 @@ func TestUserEndpoint(t *testing.T) {
 			Body:         `{"website":"http://github.com"}`,
 			Header:       test.MockAuthHeader(),
 			WantStatus:   http.StatusOK,
-			WantResponse: `*test_100@gmail.com*`,
+			WantResponse: "*test_100@gmail.com*",
 		},
 		{
 			Name:         "user by id - unauthorized",
@@ -80,7 +80,7 @@ func TestUserEndpoint(t *testing.T) {
 	}
 	service := NewService(mock.NewRepository(users))
 	router := test.MockRouter()
-	NewHTTPHandler(router.Group(""), test.MockAuthHandler, service)
+	NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
 	for _, tc := range cases {
 		test.Endpoint(t, router, tc)
 	}

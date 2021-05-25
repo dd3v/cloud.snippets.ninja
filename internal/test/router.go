@@ -34,14 +34,14 @@ func MockRouter() *routing.Router {
 
 // WithUser returns a context that contains the user identity from the given JWT.
 func WithUser(ctx context.Context, id int, login string) context.Context {
-	return context.WithValue(ctx, entity.JWTContextKey, entity.Identity{ID: id, Login: login})
+	return context.WithValue(ctx, entity.JWTCtxKey, entity.Identity{ID: id, Login: login})
 }
 
-// MockAuthHandler creates a mock authentication middleware for testing purpose.
+// MockAuthMiddleware creates a mock authentication middleware for testing purpose.
 // If the request contains an Authorization header whose value is "TEST", then
 // it considers the user is authenticated as "Tester" whose ID is "100".
 // It fails the authentication otherwise.
-func MockAuthHandler(c *routing.Context) error {
+func MockAuthMiddleware(c *routing.Context) error {
 	if c.Request.Header.Get("Authorization") != "TEST" {
 		return errors.Unauthorized("")
 	}

@@ -16,7 +16,7 @@ CREATE TABLE `snippets` (
   `favorite` tinyint(1) NOT NULL DEFAULT '0',
   `access_level` tinyint(1) NOT NULL DEFAULT '0',
   `title` varchar(500) NOT NULL,
-  `content` text,
+  `content` text NOT NULL,
   `language` varchar(20) NOT NULL,
   `custom_editor_options` json NOT NULL,
   `created_at` datetime NOT NULL,

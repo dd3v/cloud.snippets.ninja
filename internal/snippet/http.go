@@ -10,7 +10,6 @@ import (
 	"github.com/dd3v/snippets.page.backend/internal/errors"
 	"github.com/dd3v/snippets.page.backend/pkg/query"
 	routing "github.com/go-ozzo/ozzo-routing/v2"
-	"gopkg.in/guregu/null.v4"
 )
 
 type resource struct {
@@ -43,7 +42,7 @@ func (r resource) view(c *routing.Context) error {
 }
 
 func (r resource) create(c *routing.Context) error {
-	identity := c.Request.Context().Value(entity.JWTContextKey).(entity.Identity)
+	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
 	request := snippet{}
 	if err := c.Read(&request); err != nil {
 		return err
@@ -56,7 +55,7 @@ func (r resource) create(c *routing.Context) error {
 		Favorite:            request.Favorite.Value,
 		AccessLevel:         request.AccessLevel,
 		Title:               request.Title,
-		Content:             null.NewString(request.Content, true),
+		Content:             request.Content,
 		Language:            request.Language,
 		CustomEditorOptions: request.CustomEditorOptions,
 		CreatedAt:           time.Now(),
@@ -74,7 +73,7 @@ func (r resource) update(c *routing.Context) error {
 	if err != nil {
 		return err
 	}
-	identity := c.Request.Context().Value(entity.JWTContextKey).(entity.Identity)
+	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
 	request := snippet{}
 	if err := c.Read(&request); err != nil {
 		return err
@@ -88,7 +87,7 @@ func (r resource) update(c *routing.Context) error {
 		Favorite:            request.Favorite.Value,
 		AccessLevel:         request.AccessLevel,
 		Title:               request.Title,
-		Content:             null.NewString(request.Content, true),
+		Content:             request.Content,
 		Language:            request.Language,
 		CustomEditorOptions: request.CustomEditorOptions,
 		UpdatedAt:           time.Now(),
@@ -122,6 +121,7 @@ type listResponse struct {
 
 func (r resource) list(c *routing.Context) error {
 	request := newList()
+	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
 	if err := c.Read(&request); err != nil {
 		return errors.BadRequest("")
 	}
@@ -131,13 +131,13 @@ func (r resource) list(c *routing.Context) error {
 	fmt.Printf("%+v\n", request)
 
 	filter := request.filterConditions()
-	total, err := r.service.Count(c.Request.Context(), filter)
+	total, err := r.service.CountByUserID(c.Request.Context(), identity.GetID(), filter)
 	if err != nil {
 		return err
 	}
 	pagination := query.NewPagination(request.Page, request.Limit)
 	sort := query.NewSort(request.SortBy, request.OrderBy)
-	snippets, err := r.service.Query(c.Request.Context(), filter, sort, pagination)
+	snippets, err := r.service.QueryByUserID(c.Request.Context(), identity.GetID(), filter, sort, pagination)
 	if err != nil {
 		return err
 	}

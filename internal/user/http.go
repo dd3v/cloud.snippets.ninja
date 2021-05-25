@@ -14,12 +14,12 @@ type resource struct {
 }
 
 //NewHTTPHandler -
-func NewHTTPHandler(router *routing.RouteGroup, jwtAuthHandler routing.Handler, service Service) {
+func NewHTTPHandler(router *routing.RouteGroup, jwtAuthMiddleware routing.Handler, service Service) {
 	r := resource{
 		service: service,
 	}
 	router.Post("/users", r.create)
-	router.Use(jwtAuthHandler)
+	router.Use(jwtAuthMiddleware)
 	router.Get("/users/me", r.me)
 	router.Get("/users/<id>", r.get)
 	router.Put("/users/me", r.update)
@@ -42,7 +42,7 @@ func (r resource) create(c *routing.Context) error {
 }
 
 func (r resource) me(c *routing.Context) error {
-	identity := c.Request.Context().Value(entity.JWTContextKey).(entity.Identity)
+	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
 	me, err := r.service.GetByID(c.Request.Context(), identity.GetID())
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (r resource) get(c *routing.Context) error {
 }
 
 func (r resource) update(c *routing.Context) error {
-	identity := c.Request.Context().Value(entity.JWTContextKey).(entity.Identity)
+	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
 	var request UpdateRequest
 	if err := c.Read(&request); err != nil {
 		return errors.BadRequest("")

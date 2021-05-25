@@ -14,8 +14,8 @@ type Identity interface {
 	GetLogin() string
 }
 
-// Handler returns a JWT-based authentication middleware. Ozzo routing
-func Handler(verificationKey string) routing.Handler {
+// GetJWTMiddleware returns a JWT-based authentication middleware. Ozzo routing
+func GetJWTMiddleware(verificationKey string) routing.Handler {
 	return auth.JWT(verificationKey, auth.JWTOptions{TokenHandler: handleToken})
 }
 
@@ -31,13 +31,13 @@ func handleToken(c *routing.Context, token *jwt.Token) error {
 
 // WithUser returns a context that contains the user identity from the given JWT.
 func WithUser(ctx context.Context, id int, login string) context.Context {
-	return context.WithValue(ctx, entity.JWTContextKey, entity.Identity{ID: id, Login: login})
+	return context.WithValue(ctx, entity.JWTCtxKey, entity.Identity{ID: id, Login: login})
 }
 
 // CurrentUser returns the user identity from the given context.
 // Nil is returned if no user identity is found in the context.
 func CurrentUser(ctx context.Context) Identity {
-	if user, ok := ctx.Value(entity.JWTContextKey).(entity.Identity); ok {
+	if user, ok := ctx.Value(entity.JWTCtxKey).(entity.Identity); ok {
 		return user
 	}
 	return nil

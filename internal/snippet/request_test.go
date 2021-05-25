@@ -8,10 +8,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestRequest_Main(t *testing.T) {
-	t.Logf("\033[35m" + "Testing Snippet Request Validation" + "\033[0m")
-}
-
 func TestRequest_List(t *testing.T) {
 	cases := []struct {
 		name    string

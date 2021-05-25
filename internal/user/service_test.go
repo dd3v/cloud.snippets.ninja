@@ -75,7 +75,6 @@ func TestFindById(t *testing.T) {
 	id := 100000
 	user, err := testService.GetByID(context.TODO(), id)
 	assert.NotNil(t, err)
-	assert.NotEqual(t, user.ID, id)
 
 	user, err = testService.GetByID(context.TODO(), 100)
 	assert.Nil(t, err)

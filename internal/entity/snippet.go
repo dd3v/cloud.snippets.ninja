@@ -4,8 +4,6 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"time"
-
-	"gopkg.in/guregu/null.v4"
 )
 
 //Snippet - ...
@@ -15,7 +13,7 @@ type Snippet struct {
 	Favorite            bool                `json:"favorite"`
 	AccessLevel         int                 `json:"access_level"`
 	Title               string              `json:"title"`
-	Content             null.String         `json:"content"`
+	Content             string              `json:"content"`
 	Language            string              `json:"language"`
 	CustomEditorOptions CustomEditorOptions `json:"custom_editor_options" db:"custom_editor_options"`
 	CreatedAt           time.Time           `json:"created_at"`
@@ -51,6 +49,18 @@ func (pc CustomEditorOptions) Value() (driver.Value, error) {
 //TableName - returns table name in database
 func (s Snippet) TableName() string {
 	return "snippets"
+}
+
+func (s Snippet) GetOwnerID() int {
+	return s.UserID
+}
+
+func (s Snippet) IsPublic() bool {
+	if s.AccessLevel == 0 {
+		return false
+	} else {
+		return true
+	}
 }
 
 func (s *Snippet) Load(snippet Snippet) {

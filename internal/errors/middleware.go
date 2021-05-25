@@ -3,12 +3,12 @@ package errors
 import (
 	"database/sql"
 	"errors"
+	"github.com/dd3v/snippets.page.backend/internal/rbac"
 	"log"
 	"net/http"
 
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	validation "github.com/go-ozzo/ozzo-validation"
-	"github.com/go-sql-driver/mysql"
 )
 
 //Handler - error handler HTTP middleware
@@ -35,10 +35,6 @@ func buildResponseWithError(err error) ErrorResponse {
 		return err.(ErrorResponse)
 	case validation.Errors:
 		return GenerateValidationError(err.(validation.Errors))
-	case *mysql.MySQLError:
-		if mysql, ok := err.(*mysql.MySQLError); ok {
-			return BadRequest(mysql.Message)
-		}
 	case routing.HTTPError:
 		switch err.(routing.HTTPError).StatusCode() {
 		case http.StatusNotFound:
@@ -49,6 +45,10 @@ func buildResponseWithError(err error) ErrorResponse {
 				Message: err.Error(),
 			}
 		}
+	}
+
+	if errors.Is(err, rbac.AccessError) {
+		return Forbidden(err.Error())
 	}
 	if errors.Is(err, sql.ErrNoRows) {
 		return NotFound("")

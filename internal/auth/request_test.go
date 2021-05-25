@@ -43,16 +43,16 @@ func TestRefreshRequest(t *testing.T) {
 
 func testLogoutRequest(t *testing.T) {
 	cases := []struct {
-		name  string
-		model LogoutRequest
-		fail  bool
+		name    string
+		request LogoutRequest
+		fail    bool
 	}{
 		{"success", LogoutRequest{RefreshToken: "refresh_token"}, false},
 		{"fail", LogoutRequest{RefreshToken: ""}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := tc.model.Validate()
+			err := tc.request.Validate()
 			assert.Equal(t, tc.fail, err != nil)
 		})
 	}
