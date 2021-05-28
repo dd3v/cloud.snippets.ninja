@@ -9,12 +9,12 @@ import (
 func TestCreateRequestValidation(t *testing.T) {
 	cases := []struct {
 		name    string
-		request CreateRequest
+		request createRequest
 		fail    bool
 	}{
 		{
 			"success",
-			CreateRequest{
+			createRequest{
 				Login:          "test",
 				Email:          "test@mailservice.com",
 				Password:       "qwerty",
@@ -24,7 +24,7 @@ func TestCreateRequestValidation(t *testing.T) {
 		},
 		{
 			"invalid email",
-			CreateRequest{
+			createRequest{
 				Login:          "test",
 				Email:          "testmailservice.com",
 				Password:       "qwerty",
@@ -34,7 +34,7 @@ func TestCreateRequestValidation(t *testing.T) {
 		},
 		{
 			"password confirmation",
-			CreateRequest{
+			createRequest{
 				Login:          "test",
 				Email:          "testmail@service.com",
 				Password:       "qwerty",
@@ -44,7 +44,7 @@ func TestCreateRequestValidation(t *testing.T) {
 		},
 		{
 			"length",
-			CreateRequest{
+			createRequest{
 				Login:          "sadfjk32149sadfmzkdrjk324sadfjk32149sadfmzkdrjk324",
 				Email:          "testmail@service.com",
 				Password:       "qwerty",
@@ -64,26 +64,26 @@ func TestCreateRequestValidation(t *testing.T) {
 func TestUpdateRequestValidation(t *testing.T) {
 	cases := []struct {
 		name    string
-		request UpdateRequest
+		request updateRequest
 		fail    bool
 	}{
 		{
 			"success",
-			UpdateRequest{
+			updateRequest{
 				Website: "github.com",
 			},
 			false,
 		},
 		{
 			"invalid url",
-			UpdateRequest{
+			updateRequest{
 				Website: "gith@@#ubcom",
 			},
 			true,
 		},
 		{
 			"length",
-			UpdateRequest{
+			updateRequest{
 				Website: "sadfjk32149sadfmzkdrjk324sadfjk32149sadfmzkdrjk324sadfjk32149sadfmzkdrjk324sadfjk32149sadfmzkdrjk3243s",
 			},
 			true,

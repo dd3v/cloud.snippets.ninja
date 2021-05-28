@@ -7,8 +7,8 @@ import (
 	"github.com/go-ozzo/ozzo-validation/v3/is"
 )
 
-//CreateRequest - ...
-type CreateRequest struct {
+//createRequest - ...
+type createRequest struct {
 	Login          string `json:"login"`
 	Email          string `json:"email"`
 	Password       string `json:"password"`
@@ -26,7 +26,7 @@ func stringEquals(str string) validation.RuleFunc {
 }
 
 //Validate - ...
-func (r CreateRequest) Validate() error {
+func (r createRequest) Validate() error {
 	return validation.ValidateStruct(&r,
 		validation.Field(&r.Login, validation.Required, validation.Length(2, 50)),
 		validation.Field(&r.Email, validation.Required, is.Email),
@@ -36,13 +36,13 @@ func (r CreateRequest) Validate() error {
 	)
 }
 
-//UpdateRequest - ...
-type UpdateRequest struct {
+//updateRequest - ...
+type updateRequest struct {
 	Website string `json:"website"`
 }
 
 //Validate - ...
-func (u UpdateRequest) Validate() error {
+func (u updateRequest) Validate() error {
 	return validation.ValidateStruct(&u,
 		validation.Field(&u.Website, validation.Length(5, 100), is.URL),
 	)

@@ -9,12 +9,12 @@ import (
 func TestLoginRequest(t *testing.T) {
 	cases := []struct {
 		name    string
-		request LoginRequest
+		request loginRequest
 		fail    bool
 	}{
-		{"success", LoginRequest{Login: "admin", Password: "qwerty"}, false},
-		{"invalid login", LoginRequest{Login: "a", Password: "qwerty"}, true},
-		{"invalid password", LoginRequest{Login: "user_100", Password: ""}, true},
+		{"success", loginRequest{Login: "admin", Password: "qwerty"}, false},
+		{"invalid login", loginRequest{Login: "a", Password: "qwerty"}, true},
+		{"invalid password", loginRequest{Login: "user_100", Password: ""}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -27,11 +27,11 @@ func TestLoginRequest(t *testing.T) {
 func TestRefreshRequest(t *testing.T) {
 	cases := []struct {
 		name    string
-		request RefreshRequest
+		request refreshRequest
 		fail    bool
 	}{
-		{"success", RefreshRequest{RefreshToken: "sdfsdfsdf"}, false},
-		{"empty refresh token", RefreshRequest{RefreshToken: ""}, true},
+		{"success", refreshRequest{RefreshToken: "sdfsdfsdf"}, false},
+		{"empty refresh token", refreshRequest{RefreshToken: ""}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -44,11 +44,11 @@ func TestRefreshRequest(t *testing.T) {
 func testLogoutRequest(t *testing.T) {
 	cases := []struct {
 		name    string
-		request LogoutRequest
+		request logoutRequest
 		fail    bool
 	}{
-		{"success", LogoutRequest{RefreshToken: "refresh_token"}, false},
-		{"fail", LogoutRequest{RefreshToken: ""}, true},
+		{"success", logoutRequest{RefreshToken: "refresh_token"}, false},
+		{"fail", logoutRequest{RefreshToken: ""}, true},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

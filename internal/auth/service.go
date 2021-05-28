@@ -13,7 +13,7 @@ import (
 
 //Service - ...
 type Service interface {
-	Login(ctx context.Context, request LoginRequest) (entity.TokenPair, error)
+	Login(ctx context.Context, request loginRequest) (entity.TokenPair, error)
 	Refresh(ctx context.Context, refreshToken string) (entity.TokenPair, error)
 	Logout(ctx context.Context, refreshToken string) error
 }
@@ -37,7 +37,7 @@ func NewService(JWTSigningKey string, repository Repository) Service {
 	}
 }
 
-func (s service) Login(ctx context.Context, request LoginRequest) (entity.TokenPair, error) {
+func (s service) Login(ctx context.Context, request loginRequest) (entity.TokenPair, error) {
 	user, err := s.repository.FindUserByLoginOrEmail(ctx, request.Login)
 	if err != nil {
 		return entity.TokenPair{}, errors.New("Invalid login or password")

@@ -12,8 +12,8 @@ import (
 type Service interface {
 	List(ctx context.Context, limit int, offset int) ([]entity.User, error)
 	GetByID(ctx context.Context, id int) (entity.User, error)
-	Create(ctx context.Context, request CreateRequest) (entity.User, error)
-	Update(ctx context.Context, id int, request UpdateRequest) (entity.User, error)
+	Create(ctx context.Context, request createRequest) (entity.User, error)
+	Update(ctx context.Context, id int, request updateRequest) (entity.User, error)
 	Delete(ctx context.Context, id int) error
 	Count(ctx context.Context) (int, error)
 }
@@ -37,7 +37,7 @@ func (s service) GetByID(ctx context.Context, id int) (entity.User, error) {
 	return s.repository.GetByID(ctx, id)
 }
 
-func (s service) Create(ctx context.Context, request CreateRequest) (entity.User, error) {
+func (s service) Create(ctx context.Context, request createRequest) (entity.User, error) {
 	passwordHash, err := security.GenerateHashFromPassword(request.Password)
 	if err != nil {
 		return entity.User{}, err
@@ -53,7 +53,7 @@ func (s service) Create(ctx context.Context, request CreateRequest) (entity.User
 	return result, err
 }
 
-func (s service) Update(ctx context.Context, id int, request UpdateRequest) (entity.User, error) {
+func (s service) Update(ctx context.Context, id int, request updateRequest) (entity.User, error) {
 	user, err := s.repository.GetByID(ctx, id)
 	if err != nil {
 		return user, err

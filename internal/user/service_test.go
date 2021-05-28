@@ -52,7 +52,7 @@ func TestCount(t *testing.T) {
 }
 
 func TestCreate(t *testing.T) {
-	request := CreateRequest{
+	request := createRequest{
 		Login:          "test_user",
 		Email:          "test_user@mailservice.com",
 		Password:       "qwerty",
@@ -64,7 +64,7 @@ func TestCreate(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
-	request := UpdateRequest{
+	request := updateRequest{
 		Website: "new_test_100.com",
 	}
 	_, err := testService.Update(context.TODO(), 100, request)

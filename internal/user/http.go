@@ -26,7 +26,7 @@ func NewHTTPHandler(router *routing.RouteGroup, jwtAuthMiddleware routing.Handle
 }
 
 func (r resource) create(c *routing.Context) error {
-	var request CreateRequest
+	var request createRequest
 	if err := c.Read(&request); err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (r resource) get(c *routing.Context) error {
 
 func (r resource) update(c *routing.Context) error {
 	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
-	var request UpdateRequest
+	var request updateRequest
 	if err := c.Read(&request); err != nil {
 		return errors.BadRequest("")
 	}

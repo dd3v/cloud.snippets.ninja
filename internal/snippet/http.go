@@ -128,7 +128,6 @@ func (r resource) list(c *routing.Context) error {
 	if err := request.validate(); err != nil {
 		return err
 	}
-	fmt.Printf("%+v\n", request)
 
 	filter := request.filterConditions()
 	total, err := r.service.CountByUserID(c.Request.Context(), identity.GetID(), filter)

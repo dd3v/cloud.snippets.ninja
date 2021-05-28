@@ -40,7 +40,7 @@ func TestMain(t *testing.T) {
 }
 
 func TestRefreshTokenSessionAlreadyExpired(t *testing.T) {
-	request := RefreshRequest{
+	request := refreshRequest{
 		RefreshToken: "f49ac960-7cb5-11ea-aedc-acde48001122",
 	}
 	tokenPair, err := testService.Refresh(context.TODO(), request.RefreshToken)
@@ -49,7 +49,7 @@ func TestRefreshTokenSessionAlreadyExpired(t *testing.T) {
 }
 
 func TestLogin(t *testing.T) {
-	request := LoginRequest{
+	request := loginRequest{
 		Login:    "user_100",
 		Password: "qwerty",
 	}

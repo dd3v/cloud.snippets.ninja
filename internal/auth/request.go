@@ -5,33 +5,33 @@ import (
 )
 
 //AuthRequest - ...
-type LoginRequest struct {
+type loginRequest struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }
 
-func (r LoginRequest) Validate() error {
+func (r loginRequest) Validate() error {
 	return validation.ValidateStruct(&r,
 		validation.Field(&r.Login, validation.Required, validation.Length(2, 50)),
 		validation.Field(&r.Password, validation.Required, validation.Length(6, 50)),
 	)
 }
 
-type RefreshRequest struct {
+type refreshRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (r RefreshRequest) Validate() error {
+func (r refreshRequest) Validate() error {
 	return validation.ValidateStruct(&r,
 		validation.Field(&r.RefreshToken, validation.Required),
 	)
 }
 
-type LogoutRequest struct {
+type logoutRequest struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-func (r LogoutRequest) Validate() error {
+func (r logoutRequest) Validate() error {
 	return validation.ValidateStruct(&r,
 		validation.Field(&r.RefreshToken, validation.Required),
 	)

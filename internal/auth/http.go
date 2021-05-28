@@ -20,7 +20,7 @@ func NewHTTPHandler(router *routing.RouteGroup, jwtAuthMiddleware routing.Handle
 }
 
 func (r resource) login(c *routing.Context) error {
-	var request LoginRequest
+	var request loginRequest
 	if err := c.Read(&request); err != nil {
 		return err
 	}
@@ -35,7 +35,7 @@ func (r resource) login(c *routing.Context) error {
 }
 
 func (r resource) refresh(c *routing.Context) error {
-	var request RefreshRequest
+	var request refreshRequest
 	if err := c.Read(&request); err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func (r resource) refresh(c *routing.Context) error {
 }
 
 func (r resource) logout(c *routing.Context) error {
-	var request LogoutRequest
+	var request logoutRequest
 	if err := c.Read(&request); err != nil {
 		return err
 	}
