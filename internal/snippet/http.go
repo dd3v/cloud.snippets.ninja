@@ -1,7 +1,6 @@
 package snippet
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"

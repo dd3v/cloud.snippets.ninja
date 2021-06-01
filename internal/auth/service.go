@@ -2,20 +2,52 @@ package auth
 
 import (
 	"context"
-	"errors"
+	"database/sql"
+	"log"
 	"time"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
+	"github.com/dd3v/snippets.page.backend/internal/errors"
 	"github.com/dd3v/snippets.page.backend/pkg/security"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )
 
+var (
+	authErr            = errors.Unauthorized("auth: invalid login or password")
+	createSessionErr   = errors.InternalServerError("auth: session create error")
+	expiredSessionErr  = errors.Forbidden("auth: session already expired")
+	sessionNotFoundErr = errors.Forbidden("auth: access denied")
+)
+
 //Service - ...
 type Service interface {
-	Login(ctx context.Context, request loginRequest) (entity.TokenPair, error)
-	Refresh(ctx context.Context, refreshToken string) (entity.TokenPair, error)
+	Login(ctx context.Context, credentials authCredentials) (entity.TokenPair, error)
+	Refresh(ctx context.Context, credentials refreshCredentials) (entity.TokenPair, error)
 	Logout(ctx context.Context, refreshToken string) error
+}
+
+//Repository - ...
+type Repository interface {
+	GetUserByLoginOrEmail(ctx context.Context, value string) (entity.User, error)
+	CreateSession(ctx context.Context, session entity.Session) error
+	GetSessionByRefreshToken(ctx context.Context, refreshToken string) (entity.Session, error)
+	DeleteSessionByRefreshToken(ctx context.Context, refreshToken string) error
+	DeleteSessionByUserIDAndUserAgent(ctx context.Context, userID int, userAgent string) error
+	DeleteSessionByUserID(ctx context.Context, userID int) (int64, error)
+}
+
+type authCredentials struct {
+	User      string
+	Password  string
+	UserAgent string
+	IP        string
+}
+
+type refreshCredentials struct {
+	RefreshToken string
+	UserAgent    string
+	IP           string
 }
 
 type userClaims struct {
@@ -37,12 +69,23 @@ func NewService(JWTSigningKey string, repository Repository) Service {
 	}
 }
 
-func (s service) Login(ctx context.Context, request loginRequest) (entity.TokenPair, error) {
-	user, err := s.repository.FindUserByLoginOrEmail(ctx, request.Login)
+//Login
+//1. Try to get user by login or email
+//2. Check if it exists
+//3. Compare password hash
+//4.Generate token pair
+//5. Remove useless sessions from db by user id and user-agent
+//6.Create new fresh session
+func (s service) Login(ctx context.Context, credentials authCredentials) (entity.TokenPair, error) {
+	user, err := s.repository.GetUserByLoginOrEmail(ctx, credentials.User)
 	if err != nil {
-		return entity.TokenPair{}, errors.New("Invalid login or password")
+		if err == sql.ErrNoRows {
+			return entity.TokenPair{}, authErr
+		} else {
+			return entity.TokenPair{}, err
+		}
 	}
-	if security.CompareHashAndPassword(user.PasswordHash, request.Password) == true {
+	if security.CompareHashAndPassword(user.PasswordHash, credentials.Password) == true {
 		accessToken, err := s.generateAccessToken(user.ID)
 		if err != nil {
 			return entity.TokenPair{}, err
@@ -55,24 +98,36 @@ func (s service) Login(ctx context.Context, request loginRequest) (entity.TokenP
 			UserID:       user.ID,
 			RefreshToken: refreshToken,
 			Exp:          time.Now().Add(time.Minute * 100),
-			IP:           "127.0.0.1",
-			UserAgent:    "local",
+			IP:           credentials.IP,
+			UserAgent:    credentials.UserAgent,
 			CreatedAt:    time.Now(),
+		}
+
+		err = s.repository.DeleteSessionByUserIDAndUserAgent(ctx, user.ID, credentials.UserAgent)
+		if err != nil {
+			return entity.TokenPair{}, err
 		}
 		if err = s.repository.CreateSession(ctx, session); err != nil {
 			return entity.TokenPair{}, err
 		}
+
 		return entity.TokenPair{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}, nil
+	} else {
+		log.Printf("Security alert. Invalid login or password")
 	}
-	return entity.TokenPair{}, errors.New("Invalid login or password")
+	return entity.TokenPair{}, authErr
 }
 
-func (s service) Refresh(ctx context.Context, refreshToken string) (entity.TokenPair, error) {
-	session, err := s.repository.FindSessionByRefreshToken(ctx, refreshToken)
+func (s service) Refresh(ctx context.Context, credentials refreshCredentials) (entity.TokenPair, error) {
+	session, err := s.repository.GetSessionByRefreshToken(ctx, credentials.RefreshToken)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Println("Security alert. Refresh sessions not found")
+			return entity.TokenPair{}, sessionNotFoundErr
+		}
 		return entity.TokenPair{}, err
 	}
 	if err := s.repository.DeleteSessionByRefreshToken(ctx, session.RefreshToken); err != nil {
@@ -91,19 +146,24 @@ func (s service) Refresh(ctx context.Context, refreshToken string) (entity.Token
 			UserID:       session.UserID,
 			RefreshToken: refreshToken,
 			Exp:          time.Now().Add(time.Minute * 100),
-			IP:           "127.0.0.1",
-			UserAgent:    "local",
+			IP:           credentials.IP,
+			UserAgent:    credentials.UserAgent,
 			CreatedAt:    time.Now(),
 		}
 		if err = s.repository.CreateSession(ctx, session); err != nil {
-			return entity.TokenPair{}, errors.New("session error expired")
+			return entity.TokenPair{}, createSessionErr
 		}
 		return entity.TokenPair{
 			AccessToken:  accessToken,
 			RefreshToken: refreshToken,
 		}, nil
+	} else {
+		//if refresh token is expired just remove all sessions
+		if sessionsCount, err := s.repository.DeleteSessionByUserID(ctx, session.UserID); err == nil {
+			log.Printf("Security alert. Remove all sessions by user id. Total: %d", sessionsCount)
+		}
 	}
-	return entity.TokenPair{}, errors.New("session already expired")
+	return entity.TokenPair{}, expiredSessionErr
 }
 
 func (s service) Logout(ctx context.Context, token string) error {
@@ -122,5 +182,8 @@ func (s service) generateAccessToken(userID int) (string, error) {
 
 func (s service) generateRefreshToken() (string, error) {
 	token, err := uuid.NewUUID()
+	if err != nil {
+		return "", err
+	}
 	return token.String(), err
 }

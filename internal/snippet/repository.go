@@ -10,20 +10,12 @@ import (
 	dbx "github.com/go-ozzo/ozzo-dbx"
 )
 
-type Repository interface {
-	QueryByUserID(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error)
-	GetByID(ctx context.Context, id int) (entity.Snippet, error)
-	Create(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error)
-	Update(ctx context.Context, snippet entity.Snippet) error
-	Delete(ctx context.Context, snippet entity.Snippet) error
-	CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error)
-}
 
 type repository struct {
 	db *dbcontext.DB
 }
 
-//NewRepository - ...
+//NewMockRepository - ...
 func NewRepository(db *dbcontext.DB) Repository {
 	return repository{
 		db: db,

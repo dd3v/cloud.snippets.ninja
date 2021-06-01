@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/dd3v/snippets.page.backend/internal/snippet/mock"
 	"github.com/dd3v/snippets.page.backend/internal/test"
 )
 
@@ -50,7 +49,7 @@ func TestSnippetEndpoint(t *testing.T) {
 	}
 
 	router := test.MockRouter()
-	service := NewService(mock.NewRepository(), test.RBACMock{})
+	service := NewService(NewMockRepository(), test.RBACMock{})
 
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {

@@ -1,4 +1,4 @@
-package mock
+package user
 
 import (
 	"context"
@@ -14,7 +14,7 @@ type UserMemoryRepository struct {
 	items []entity.User
 }
 
-func NewRepository(items []entity.User) UserMemoryRepository {
+func NewMockRepository(items []entity.User) UserMemoryRepository {
 	r := UserMemoryRepository{}
 	r.items = items
 	return r

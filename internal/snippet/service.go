@@ -15,6 +15,16 @@ type Service interface {
 	Delete(context context.Context, id int) error
 	CountByUserID(context context.Context, userID int, filter map[string]string) (int, error)
 }
+
+type Repository interface {
+	QueryByUserID(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error)
+	GetByID(ctx context.Context, id int) (entity.Snippet, error)
+	Create(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error)
+	Update(ctx context.Context, snippet entity.Snippet) error
+	Delete(ctx context.Context, snippet entity.Snippet) error
+	CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error)
+}
+
 type RBAC interface {
 	CanViewSnippet(ctx context.Context, snippet entity.Snippet) error
 	CanDeleteSnippet(ctx context.Context, snippet entity.Snippet) error

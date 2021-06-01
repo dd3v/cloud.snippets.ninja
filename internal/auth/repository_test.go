@@ -37,7 +37,7 @@ func TestRepositoryCreateSession(t *testing.T) {
 }
 
 func TestRepositoryFindSessionByRefreshToken(t *testing.T) {
-	session, err := r.FindSessionByRefreshToken(context.TODO(), "587e4ac6-8722-11ea-91bf-acde48001122")
+	session, err := r.GetSessionByRefreshToken(context.TODO(), "587e4ac6-8722-11ea-91bf-acde48001122")
 	assert.Equal(t, "587e4ac6-8722-11ea-91bf-acde48001122", session.RefreshToken)
 	assert.Nil(t, err)
 }
@@ -45,7 +45,7 @@ func TestRepositoryFindSessionByRefreshToken(t *testing.T) {
 func TestDeleteSessionByRefreshToken(t *testing.T) {
 	err := r.DeleteSessionByRefreshToken(context.TODO(), "587e4ac6-8722-11ea-91bf-acde48001122")
 	assert.Nil(t, err)
-	session, err := r.FindSessionByRefreshToken(context.TODO(), "587e4ac6-8722-11ea-91bf-acde48001122")
+	session, err := r.GetSessionByRefreshToken(context.TODO(), "587e4ac6-8722-11ea-91bf-acde48001122")
 	assert.NotNil(t, err)
 	assert.Empty(t, session.ID)
 }

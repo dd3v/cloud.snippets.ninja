@@ -14,8 +14,8 @@ func NewHTTPHandler(router *routing.RouteGroup, jwtAuthMiddleware routing.Handle
 		service: service,
 	}
 	router.Post("/auth/login", r.login)
-	router.Use(jwtAuthMiddleware)
 	router.Post("/auth/refresh", r.refresh)
+	router.Use(jwtAuthMiddleware)
 	router.Post("/auth/logout", r.logout)
 }
 
@@ -27,7 +27,15 @@ func (r resource) login(c *routing.Context) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
-	token, err := r.service.Login(c.Request.Context(), request)
+
+	auth := authCredentials{
+		User:        request.Login,
+		Password:    request.Password,
+		UserAgent:   c.Request.UserAgent(),
+		IP:          c.Request.RemoteAddr,
+	}
+
+	token, err := r.service.Login(c.Request.Context(), auth)
 	if err != nil {
 		return err
 	}
@@ -42,7 +50,14 @@ func (r resource) refresh(c *routing.Context) error {
 	if err := request.Validate(); err != nil {
 		return err
 	}
-	token, err := r.service.Refresh(c.Request.Context(), request.RefreshToken)
+
+	refreshCredentials := refreshCredentials{
+		RefreshToken: request.RefreshToken,
+		UserAgent:    c.Request.UserAgent(),
+		IP:           c.Request.RemoteAddr,
+	}
+
+	token, err := r.service.Refresh(c.Request.Context(), refreshCredentials)
 	if err != nil {
 		return err
 	}

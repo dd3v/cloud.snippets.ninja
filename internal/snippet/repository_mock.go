@@ -1,4 +1,4 @@
-package mock
+package snippet
 
 import (
 	"context"
@@ -16,16 +16,7 @@ type SnippetMemoryRepository struct {
 	snippets []entity.Snippet
 }
 
-type Repository interface {
-	QueryByUserID(context.Context, int, map[string]string, query.Sort, query.Pagination) ([]entity.Snippet, error)
-	GetByID(ctx context.Context, id int) (entity.Snippet, error)
-	Create(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error)
-	Update(ctx context.Context, snippet entity.Snippet) error
-	Delete(ctx context.Context, snippet entity.Snippet) error
-	CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error)
-}
-
-func NewRepository() SnippetMemoryRepository {
+func NewMockRepository() SnippetMemoryRepository {
 	r := SnippetMemoryRepository{}
 	r.snippets = []entity.Snippet{
 		{

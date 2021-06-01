@@ -18,6 +18,17 @@ type Service interface {
 	Count(ctx context.Context) (int, error)
 }
 
+//Repository - ...
+type Repository interface {
+	List(ctx context.Context, limit int, offset int) ([]entity.User, error)
+	GetByID(ctx context.Context, id int) (entity.User, error)
+	Create(ctx context.Context, user entity.User) (entity.User, error)
+	Update(ctx context.Context, user entity.User) error
+	Delete(ctx context.Context, id int) error
+	Count(ctx context.Context) (int, error)
+}
+
+
 type service struct {
 	repository Repository
 }

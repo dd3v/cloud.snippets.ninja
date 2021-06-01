@@ -3,7 +3,6 @@ package snippet
 import (
 	"context"
 	"database/sql"
-	"github.com/dd3v/snippets.page.backend/internal/snippet/mock"
 	"testing"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
@@ -80,7 +79,7 @@ func TestService_GetByID(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := mock.NewRepository()
+			mockRepository := NewMockRepository()
 			s := NewService(mockRepository, tc.rbac)
 			snippet, err := s.GetByID(context.Background(), tc.args.id)
 			assert.Equal(t, tc.wantData, snippet)
@@ -119,13 +118,13 @@ func TestService_Create(t *testing.T) {
 				},
 			},
 			entity.Snippet{},
-			mock.ErrorRepository,
+			ErrorRepository,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := mock.NewRepository()
+			mockRepository := NewMockRepository()
 			s := NewService(mockRepository, rbac.New())
 			snippet, err := s.Create(context.Background(), tc.args.snippet)
 			assert.Equal(t, tc.wantData, snippet)
@@ -197,7 +196,7 @@ func TestService_Update(t *testing.T) {
 				},
 			},
 			entity.Snippet{},
-			mock.ErrorRepository,
+			ErrorRepository,
 		},
 		{
 			"rbac fail",
@@ -227,7 +226,7 @@ func TestService_Update(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := mock.NewRepository()
+			mockRepository := NewMockRepository()
 			s := NewService(mockRepository, tc.rbac)
 			snippet, err := s.Update(context.Background(), tc.args.snippet)
 			assert.Equal(t, tc.wantData, snippet)
@@ -282,7 +281,7 @@ func TestService_Delete(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := mock.NewRepository()
+			mockRepository := NewMockRepository()
 			s := NewService(mockRepository, tc.rbac)
 			err := s.Delete(context.Background(), tc.args.id)
 			assert.Equal(t, tc.wantErr, err)
@@ -317,13 +316,13 @@ func TestService_CountByUserID(t *testing.T) {
 			args{userID: 0, filter: map[string]string{}},
 			test.RBACMock{},
 			0,
-			mock.ErrorRepository,
+			ErrorRepository,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := mock.NewRepository()
+			mockRepository := NewMockRepository()
 			s := NewService(mockRepository, tc.rbac)
 			count, err := s.CountByUserID(context.Background(), tc.args.userID, tc.args.filter)
 			assert.Equal(t, tc.wantErr, err)
@@ -364,7 +363,7 @@ func TestService_QueryByUserID(t *testing.T) {
 	for _, tc := range cases {
 
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := mock.NewRepository()
+			mockRepository := NewMockRepository()
 			s := NewService(mockRepository, tc.rbac)
 			snippets, err := s.QueryByUserID(context.Background(), tc.args.userID, tc.args.filter, tc.args.sort, tc.args.pagination)
 			assert.NotEmpty(t, snippets)

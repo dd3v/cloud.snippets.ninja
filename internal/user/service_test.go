@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/internal/user/mock"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -41,7 +40,7 @@ var users = []entity.User{
 }
 
 func TestService(t *testing.T) {
-	mockRepository := mock.NewRepository(users)
+	mockRepository := NewMockRepository(users)
 	testService = NewService(mockRepository)
 }
 

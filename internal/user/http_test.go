@@ -7,7 +7,6 @@ import (
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/internal/test"
-	"github.com/dd3v/snippets.page.backend/internal/user/mock"
 )
 
 func TestUserEndpoint(t *testing.T) {
@@ -78,7 +77,7 @@ func TestUserEndpoint(t *testing.T) {
 			WantResponse: "",
 		},
 	}
-	service := NewService(mock.NewRepository(users))
+	service := NewService(NewMockRepository(users))
 	router := test.MockRouter()
 	NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
 	for _, tc := range cases {
