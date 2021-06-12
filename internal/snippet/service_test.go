@@ -2,233 +2,345 @@ package snippet
 
 import (
 	"context"
-	"database/sql"
-	"testing"
-
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/internal/rbac"
 	"github.com/dd3v/snippets.page.backend/internal/test"
 	"github.com/dd3v/snippets.page.backend/pkg/query"
 	"github.com/stretchr/testify/assert"
+	"testing"
+	"time"
 )
-
 
 func TestService_GetByID(t *testing.T) {
 	type args struct {
 		id int
 	}
-
 	cases := []struct {
-		name     string
-		args     args
-		rbac     test.RBACMock
-		wantData entity.Snippet
-		wantErr  error
+		name       string
+		args       args
+		rbac       test.RBACMock
+		repository Repository
+		wantData   entity.Snippet
+		wantErr    error
 	}{
 		{
-			"not found",
-			args{
-				id: 123,
-			},
-			test.RBACMock{
-				CanViewSnippetFn: func(context.Context, entity.Snippet) error {
-					return nil
-				},
-			},
-			entity.Snippet{},
-			sql.ErrNoRows,
-		},
-		{
-			"success",
-			args{
+			name: "user can get snippet by ID",
+			args: args{
 				id: 1,
 			},
-			test.RBACMock{
-				CanViewSnippetFn: func(context.Context, entity.Snippet) error {
+			rbac: test.RBACMock{
+				CanViewSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
 					return nil
 				},
 			},
-			entity.Snippet{
-				ID:                  1,
-				UserID:              1,
-				Favorite:            true,
-				AccessLevel:         0,
-				Title:               "PHP hello world",
-				Content:             "<?php echo 'Hello world'; ?>",
-				Language:            "php",
-				CustomEditorOptions: entity.CustomEditorOptions{},
-				CreatedAt:           test.Time(2020),
-				UpdatedAt:           test.Time(2021),
-			},
-			nil,
-		},
-		{
-			"forbidden",
-			args{
-				id: 2,
-			},
-			test.RBACMock{
-				CanViewSnippetFn: func(context.Context, entity.Snippet) error {
-					return rbac.AccessError
+			repository: RepositoryMock{
+				QueryByUserIDFn: nil,
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              1,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test snippet",
+						Content:             "hello world",
+						Language:            "go",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           test.Time(2020),
+						UpdatedAt:           test.Time(2020),
+					}, nil
 				},
+				CreateFn:        nil,
+				UpdateFn:        nil,
+				DeleteFn:        nil,
+				CountByUserIDFn: nil,
 			},
-			entity.Snippet{},
-			rbac.AccessError,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := NewMockRepository()
-			s := NewService(mockRepository, tc.rbac)
-			snippet, err := s.GetByID(context.Background(), tc.args.id)
-			assert.Equal(t, tc.wantData, snippet)
-			assert.Equal(t, tc.wantErr, err)
-		})
-	}
-
-}
-
-func TestService_Create(t *testing.T) {
-
-	type args struct {
-		snippet entity.Snippet
-	}
-
-	cases := []struct {
-		name     string
-		args     args
-		wantData entity.Snippet
-		wantErr  error
-	}{
-		{
-			"success",
-			args{
-				snippet: entity.Snippet{},
-			},
-			entity.Snippet{},
-			nil,
-		},
-		{
-			"fail",
-			args{
-				snippet: entity.Snippet{
-					ID:    1,
-					Title: "error",
-				},
-			},
-			entity.Snippet{},
-			ErrorRepository,
-		},
-	}
-
-	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := NewMockRepository()
-			s := NewService(mockRepository, rbac.New())
-			snippet, err := s.Create(context.Background(), tc.args.snippet)
-			assert.Equal(t, tc.wantData, snippet)
-			assert.Equal(t, tc.wantErr, err)
-		})
-	}
-
-}
-
-func TestService_Update(t *testing.T) {
-
-	type args struct {
-		snippet entity.Snippet
-	}
-
-	cases := []struct {
-		name     string
-		args     args
-		rbac     test.RBACMock
-		wantData entity.Snippet
-		wantErr  error
-	}{
-		{
-			"success",
-			args{
-				snippet: entity.Snippet{
-					ID:                  1,
-					UserID:              1,
-					Favorite:            false,
-					AccessLevel:         0,
-					Title:               "PHP hello world - updated",
-					Content:             "<?php echo 'Hello world'; ?>",
-					Language:            "php",
-					CustomEditorOptions: entity.CustomEditorOptions{},
-					CreatedAt:           test.Time(2020),
-					UpdatedAt:           test.Time(2021),
-				},
-			},
-			test.RBACMock{
-				CanUpdateSnippetFn: func(context.Context, entity.Snippet) error {
-					return nil
-				},
-			},
-			entity.Snippet{
+			wantData: entity.Snippet{
 				ID:                  1,
 				UserID:              1,
 				Favorite:            false,
 				AccessLevel:         0,
-				Title:               "PHP hello world - updated",
-				Content:             "<?php echo 'Hello world'; ?>",
-				Language:            "php",
+				Title:               "test snippet",
+				Content:             "hello world",
+				Language:            "go",
 				CustomEditorOptions: entity.CustomEditorOptions{},
 				CreatedAt:           test.Time(2020),
-				UpdatedAt:           test.Time(2021),
+				UpdatedAt:           test.Time(2020),
 			},
-			nil,
+			wantErr: nil,
 		},
 		{
-			"repository fail",
-			args{
-				snippet: entity.Snippet{
-					ID:    1,
-					Title: "error",
+			name: "user does not have permission",
+			args: args{
+				id: 1,
+			},
+			rbac: test.RBACMock{
+				CanViewSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return rbac.AccessError
 				},
 			},
-			test.RBACMock{
-				CanUpdateSnippetFn: func(context.Context, entity.Snippet) error {
+			repository: RepositoryMock{
+				QueryByUserIDFn: nil,
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              2,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test snippet",
+						Content:             "hello world",
+						Language:            "go",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           test.Time(2020),
+						UpdatedAt:           test.Time(2020),
+					}, nil
+				},
+				CreateFn:        nil,
+				UpdateFn:        nil,
+				DeleteFn:        nil,
+				CountByUserIDFn: nil,
+			},
+			wantData: entity.Snippet{},
+			wantErr:  rbac.AccessError,
+		},
+		{
+			name: "repository error",
+			args: args{
+				id: 1,
+			},
+			rbac: test.RBACMock{
+				CanViewSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
 					return nil
 				},
 			},
-			entity.Snippet{},
-			ErrorRepository,
+			repository: RepositoryMock{
+				QueryByUserIDFn: nil,
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{}, repositoryMockErr
+				},
+				CreateFn:        nil,
+				UpdateFn:        nil,
+				DeleteFn:        nil,
+				CountByUserIDFn: nil,
+			},
+			wantData: entity.Snippet{},
+			wantErr:  repositoryMockErr,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			service := NewService(tc.repository, tc.rbac)
+			snippet, err := service.GetByID(context.Background(), tc.args.id)
+			assert.Equal(t, tc.wantData, snippet)
+			assert.Equal(t, tc.wantErr, err)
+		})
+	}
+}
+
+func TestService_Create(t *testing.T) {
+	type args struct {
+		snippet entity.Snippet
+	}
+	cases := []struct {
+		name       string
+		args       args
+		rbac       test.RBACMock
+		repository Repository
+		wantData   entity.Snippet
+		wantErr    error
+	}{
+		{
+			name: "user can create snippet",
+			args: args{
+				snippet: entity.Snippet{
+					UserID:              1,
+					Favorite:            false,
+					AccessLevel:         0,
+					Title:               "test",
+					Content:             "test context",
+					Language:            "php",
+					CustomEditorOptions: entity.CustomEditorOptions{},
+					CreatedAt:           test.Time(2020),
+					UpdatedAt:           test.Time(2020),
+				},
+			},
+			rbac: test.RBACMock{},
+			repository: RepositoryMock{
+				CreateFn: func(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              1,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test",
+						Content:             "test context",
+						Language:            "php",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           test.Time(2020),
+						UpdatedAt:           test.Time(2020),
+					}, nil
+				},
+			},
+			wantData: entity.Snippet{
+				ID:                  1,
+				UserID:              1,
+				Favorite:            false,
+				AccessLevel:         0,
+				Title:               "test",
+				Content:             "test context",
+				Language:            "php",
+				CustomEditorOptions: entity.CustomEditorOptions{},
+				CreatedAt:           test.Time(2020),
+				UpdatedAt:           test.Time(2020),
+			},
+			wantErr: nil,
 		},
 		{
-			"rbac fail",
-			args{
+			name: "repository error",
+			args: args{
+				snippet: entity.Snippet{
+					UserID:              1,
+					Favorite:            false,
+					AccessLevel:         0,
+					Title:               "test",
+					Content:             "test context",
+					Language:            "php",
+					CustomEditorOptions: entity.CustomEditorOptions{},
+					CreatedAt:           test.Time(2020),
+					UpdatedAt:           test.Time(2020),
+				},
+			},
+			rbac: test.RBACMock{},
+			repository: RepositoryMock{
+				CreateFn: func(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error) {
+					return entity.Snippet{}, repositoryMockErr
+				},
+			},
+			wantData: entity.Snippet{},
+			wantErr:  repositoryMockErr,
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			service := NewService(tc.repository, tc.rbac)
+			snippet, err := service.Create(context.Background(), tc.args.snippet)
+			assert.Equal(t, tc.wantData, snippet)
+			assert.Equal(t, tc.wantErr, err)
+		})
+	}
+}
+
+func TestService_Update(t *testing.T) {
+	type args struct {
+		snippet entity.Snippet
+	}
+	cases := []struct {
+		name       string
+		args       args
+		rbac       test.RBACMock
+		repository Repository
+		wantData   entity.Snippet
+		wantErr    error
+	}{
+		{
+			name: "user can update snippet",
+			args: args{
 				snippet: entity.Snippet{
 					ID:                  1,
 					UserID:              1,
 					Favorite:            false,
 					AccessLevel:         0,
-					Title:               "PHP hello world - updated",
-					Content:             "<?php echo 'Hello world'; ?>",
+					Title:               "test",
+					Content:             "test context",
 					Language:            "php",
 					CustomEditorOptions: entity.CustomEditorOptions{},
 					CreatedAt:           test.Time(2020),
-					UpdatedAt:           test.Time(2021),
+					UpdatedAt:           test.Time(2020),
 				},
 			},
-			test.RBACMock{
-				CanUpdateSnippetFn: func(context.Context, entity.Snippet) error {
-					return rbac.AccessError
+			rbac: test.RBACMock{
+				CanUpdateSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return nil
 				},
 			},
-			entity.Snippet{},
-			rbac.AccessError,
+			repository: RepositoryMock{
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              1,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test",
+						Content:             "test context",
+						Language:            "php",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           test.Time(2020),
+						UpdatedAt:           test.Time(2020),
+					}, nil
+				},
+				UpdateFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return nil
+				},
+			},
+			wantData: entity.Snippet{
+				ID:                  1,
+				UserID:              1,
+				Favorite:            false,
+				AccessLevel:         0,
+				Title:               "test",
+				Content:             "test context",
+				Language:            "php",
+				CustomEditorOptions: entity.CustomEditorOptions{},
+				CreatedAt:           test.Time(2020),
+				UpdatedAt:           test.Time(2020),
+			},
+			wantErr: nil,
+		},
+		{
+			name: "repository error",
+			args: args{
+				snippet: entity.Snippet{
+					ID:                  1,
+					UserID:              1,
+					Favorite:            false,
+					AccessLevel:         0,
+					Title:               "test",
+					Content:             "test context",
+					Language:            "php",
+					CustomEditorOptions: entity.CustomEditorOptions{},
+					CreatedAt:           test.Time(2020),
+				},
+			},
+			rbac: test.RBACMock{
+				CanUpdateSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return nil
+				},
+			},
+			repository: RepositoryMock{
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              1,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test",
+						Content:             "test context",
+						Language:            "php",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           test.Time(2020),
+					}, nil
+				},
+				UpdateFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return repositoryMockErr
+				},
+			},
+			wantData: entity.Snippet{},
+			wantErr:  repositoryMockErr,
 		},
 	}
-
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := NewMockRepository()
-			s := NewService(mockRepository, tc.rbac)
-			snippet, err := s.Update(context.Background(), tc.args.snippet)
+			service := NewService(tc.repository, tc.rbac)
+			snippet, err := service.Update(context.Background(), tc.args.snippet)
 			assert.Equal(t, tc.wantData, snippet)
 			assert.Equal(t, tc.wantErr, err)
 		})
@@ -236,100 +348,157 @@ func TestService_Update(t *testing.T) {
 }
 
 func TestService_Delete(t *testing.T) {
-
 	type args struct {
 		id int
 	}
 
 	cases := []struct {
-		name    string
-		args    args
-		rbac    test.RBACMock
-		wantErr error
+		name       string
+		args       args
+		rbac       test.RBACMock
+		repository RepositoryMock
+		wantErr    error
 	}{
 		{
-			"success",
-			args{id: 1},
-			test.RBACMock{
-				CanDeleteSnippetFn: func(context.Context, entity.Snippet) error {
+			name: "user can delete snippet",
+			args: args{id: 1},
+			rbac: test.RBACMock{
+				CanDeleteSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
 					return nil
 				},
 			},
-			nil,
-		},
-		{
-			"not found",
-			args{id: 123},
-			test.RBACMock{
-				CanDeleteSnippetFn: func(context.Context, entity.Snippet) error {
+			repository: RepositoryMock{
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              1,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test",
+						Content:             "test",
+						Language:            "go",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           time.Time{},
+						UpdatedAt:           time.Time{},
+					}, nil
+				},
+				DeleteFn: func(ctx context.Context, snippet entity.Snippet) error {
 					return nil
 				},
 			},
-			sql.ErrNoRows,
+			wantErr: nil,
 		},
 		{
-			"forbidden",
-			args{id: 2},
-			test.RBACMock{
-				CanDeleteSnippetFn: func(context.Context, entity.Snippet) error {
+			name: "repository error",
+			args: args{id: 1},
+			rbac: test.RBACMock{
+				CanDeleteSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return nil
+				},
+			},
+			repository: RepositoryMock{
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              1,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test",
+						Content:             "test",
+						Language:            "go",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           time.Time{},
+						UpdatedAt:           time.Time{},
+					}, nil
+				},
+				DeleteFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return repositoryMockErr
+				},
+			},
+			wantErr: repositoryMockErr,
+		},
+		{
+			name: "user does not have permissions",
+			args: args{id: 1},
+			rbac: test.RBACMock{
+				CanDeleteSnippetFn: func(ctx context.Context, snippet entity.Snippet) error {
 					return rbac.AccessError
 				},
 			},
-			rbac.AccessError,
+			repository: RepositoryMock{
+				GetByIDFn: func(ctx context.Context, id int) (entity.Snippet, error) {
+					return entity.Snippet{
+						ID:                  1,
+						UserID:              1,
+						Favorite:            false,
+						AccessLevel:         0,
+						Title:               "test",
+						Content:             "test",
+						Language:            "go",
+						CustomEditorOptions: entity.CustomEditorOptions{},
+						CreatedAt:           time.Time{},
+						UpdatedAt:           time.Time{},
+					}, nil
+				},
+				DeleteFn: func(ctx context.Context, snippet entity.Snippet) error {
+					return nil
+				},
+			},
+			wantErr: rbac.AccessError,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := NewMockRepository()
-			s := NewService(mockRepository, tc.rbac)
-			err := s.Delete(context.Background(), tc.args.id)
+			service := NewService(tc.repository, tc.rbac)
+			err := service.Delete(context.Background(), tc.args.id)
 			assert.Equal(t, tc.wantErr, err)
 		})
 	}
-
 }
 
 func TestService_CountByUserID(t *testing.T) {
-
 	type args struct {
 		userID int
 		filter map[string]string
 	}
 
 	cases := []struct {
-		name     string
-		args     args
-		rbac     test.RBACMock
-		wantData int
-		wantErr  error
+		name       string
+		args       args
+		repository Repository
+		rbac       test.RBACMock
+		wantData   int
+		wantErr    error
 	}{
 		{
-			"success",
-			args{userID: 1, filter: map[string]string{}},
-			test.RBACMock{},
-			3,
-			nil,
-		},
-		{
-			"repository error",
-			args{userID: 0, filter: map[string]string{}},
-			test.RBACMock{},
-			0,
-			ErrorRepository,
+			name: "user name delete snippet",
+			args: args{
+				1, map[string]string{"sdfsdfsdf": "sdfsdfsd"},
+			},
+			repository: RepositoryMock{
+				CountByUserIDFn: func(ctx context.Context, userID int, filter map[string]string) (int, error) {
+					return 1, nil
+				},
+			},
+			rbac:     test.RBACMock{},
+			wantData: 1,
+			wantErr:  nil,
 		},
 	}
 
 	for _, tc := range cases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := NewMockRepository()
-			s := NewService(mockRepository, tc.rbac)
-			count, err := s.CountByUserID(context.Background(), tc.args.userID, tc.args.filter)
-			assert.Equal(t, tc.wantErr, err)
-			assert.Equal(t, tc.wantData, count)
-		})
-	}
 
+		t.Run(tc.name, func(t *testing.T) {
+
+			service := NewService(tc.repository, tc.rbac)
+			count, err := service.CountByUserID(context.Background(), tc.args.userID, tc.args.filter)
+			assert.Equal(t, tc.wantData, count)
+			assert.Equal(t, tc.wantErr, err)
+
+		})
+
+	}
 }
 
 func TestService_QueryByUserID(t *testing.T) {
@@ -342,34 +511,82 @@ func TestService_QueryByUserID(t *testing.T) {
 	}
 
 	cases := []struct {
-		name    string
-		args    args
-		rbac    test.RBACMock
-		wantErr error
+		name       string
+		args       args
+		repository RepositoryMock
+		wantData   []entity.Snippet
+		wantErr    error
 	}{
 		{
-			"success",
-			args{
-				userID:     1,
-				filter:     map[string]string{},
+			name: "user can get snippets by conditions",
+			args: args{
+				userID: 1,
+				filter: map[string]string{
+					"favorite": "1",
+				},
 				sort:       query.NewSort("id", "asc"),
-				pagination: query.NewPagination(1, 10),
+				pagination: query.NewPagination(1, 20),
 			},
-			test.RBACMock{},
-			nil,
+			repository: RepositoryMock{
+				QueryByUserIDFn: func(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
+					return []entity.Snippet{
+						{
+							ID:                  1,
+							UserID:              1,
+							Favorite:            true,
+							AccessLevel:         0,
+							Title:               "test",
+							Content:             "test",
+							Language:            "test",
+							CustomEditorOptions: entity.CustomEditorOptions{},
+							CreatedAt:           test.Time(2020),
+							UpdatedAt:           test.Time(2021),
+						},
+					}, nil
+				},
+			},
+			wantData: []entity.Snippet{
+				{
+					ID:                  1,
+					UserID:              1,
+					Favorite:            true,
+					AccessLevel:         0,
+					Title:               "test",
+					Content:             "test",
+					Language:            "test",
+					CustomEditorOptions: entity.CustomEditorOptions{},
+					CreatedAt:           test.Time(2020),
+					UpdatedAt:           test.Time(2021),
+				},
+			},
+			wantErr: nil,
+		},
+		{
+			name: "repository error",
+			args: args{
+				userID: 1,
+				filter: map[string]string{
+					"favorite": "1",
+				},
+				sort:       query.NewSort("id", "asc"),
+				pagination: query.NewPagination(1, 20),
+			},
+			repository: RepositoryMock{
+				QueryByUserIDFn: func(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
+					return []entity.Snippet{}, repositoryMockErr
+				},
+			},
+			wantData: []entity.Snippet{},
+			wantErr:  repositoryMockErr,
 		},
 	}
 
 	for _, tc := range cases {
-
 		t.Run(tc.name, func(t *testing.T) {
-			mockRepository := NewMockRepository()
-			s := NewService(mockRepository, tc.rbac)
-			snippets, err := s.QueryByUserID(context.Background(), tc.args.userID, tc.args.filter, tc.args.sort, tc.args.pagination)
-			assert.NotEmpty(t, snippets)
+			service := NewService(tc.repository, test.RBACMock{})
+			snippets, err := service.QueryByUserID(context.Background(), tc.args.userID, tc.args.filter, tc.args.sort, tc.args.pagination)
+			assert.Equal(t, tc.wantData, snippets)
 			assert.Equal(t, tc.wantErr, err)
 		})
-
 	}
-
 }

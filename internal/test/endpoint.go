@@ -13,7 +13,6 @@ import (
 
 //APITestCase - ...
 type APITestCase struct {
-	Name         string
 	Method       string
 	URL          string
 	Body         string
@@ -23,8 +22,8 @@ type APITestCase struct {
 }
 
 //Endpoint - ...
-func Endpoint(t *testing.T, router *routing.Router, tc APITestCase) {
-	t.Run(tc.Name, func(t *testing.T) {
+func Endpoint(t *testing.T, name string, router *routing.Router, tc APITestCase) {
+	t.Run(name, func(t *testing.T) {
 		req, err := http.NewRequest(tc.Method, tc.URL, bytes.NewBufferString(tc.Body))
 		if err != nil {
 			//TODO: probably t.Error() will be enough

@@ -50,7 +50,7 @@ func (r repository) Create(ctx context.Context, snippet entity.Snippet) (entity.
 }
 
 func (r repository) Update(ctx context.Context, snippet entity.Snippet) error {
-	return r.db.With(ctx).Model(&snippet).Exclude("UserID", "CreatedAt").Update()
+	return r.db.With(ctx).Model(&snippet).Exclude("ID", "UserID", "CreatedAt").Update()
 }
 
 func (r repository) Delete(ctx context.Context, snippet entity.Snippet) error {

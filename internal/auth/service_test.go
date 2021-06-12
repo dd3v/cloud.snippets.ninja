@@ -23,8 +23,8 @@ func TestAuthService_Login(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			"user can successfully login",
-			args{
+			name: "user can successfully login",
+			args: args{
 				authCredentials{
 					User:      "test",
 					Password:  "qwerty",
@@ -32,7 +32,7 @@ func TestAuthService_Login(t *testing.T) {
 					IP:        "127.0.0.1",
 				},
 			},
-			RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, login string) (entity.User, error) {
 					return entity.User{
 						ID:           1,
@@ -40,7 +40,7 @@ func TestAuthService_Login(t *testing.T) {
 						Login:        "test",
 						Email:        "",
 						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2020),
+						UpdatedAt:    test.Time(2021),
 					}, nil
 				},
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
@@ -50,12 +50,12 @@ func TestAuthService_Login(t *testing.T) {
 					return nil
 				},
 			},
-			true,
-			nil,
+			wantData: true,
+			wantErr:  nil,
 		},
 		{
-			"invalid login or password",
-			args{
+			name: "invalid login or password",
+			args: args{
 				authCredentials{
 					User:      "test",
 					Password:  "123123",
@@ -63,7 +63,7 @@ func TestAuthService_Login(t *testing.T) {
 					IP:        "127.0.0.1",
 				},
 			},
-			RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, login string) (entity.User, error) {
 					return entity.User{
 						ID:           0,
@@ -71,19 +71,19 @@ func TestAuthService_Login(t *testing.T) {
 						Login:        "test",
 						Email:        "",
 						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2020),
+						UpdatedAt:    test.Time(2021),
 					}, nil
 				},
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
 					return nil
 				},
 			},
-			false,
-			authErr,
+			wantData: false,
+			wantErr:  authErr,
 		},
 		{
-			"error when try to find user by login or password",
-			args{
+			name: "error when try to find user by login or password",
+			args: args{
 				authCredentials{
 					User:      "test",
 					Password:  "qwerty",
@@ -91,7 +91,7 @@ func TestAuthService_Login(t *testing.T) {
 					IP:        "127.0.0.1",
 				},
 			},
-			RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, login string) (entity.User, error) {
 					return entity.User{}, repositoryMockErr
 				},
@@ -99,12 +99,12 @@ func TestAuthService_Login(t *testing.T) {
 					return nil
 				},
 			},
-			false,
-			repositoryMockErr,
+			wantData: false,
+			wantErr:  repositoryMockErr,
 		},
 		{
-			"session could not be created",
-			args{
+			name: "session could not be created",
+			args: args{
 				authCredentials{
 					User:      "test",
 					Password:  "qwerty",
@@ -112,7 +112,7 @@ func TestAuthService_Login(t *testing.T) {
 					IP:        "127.0.0.1",
 				},
 			},
-			RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, login string) (entity.User, error) {
 					return entity.User{
 						ID:           1,
@@ -120,7 +120,7 @@ func TestAuthService_Login(t *testing.T) {
 						Login:        "test",
 						Email:        "",
 						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2020),
+						UpdatedAt:    test.Time(2021),
 					}, nil
 				},
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
@@ -130,8 +130,8 @@ func TestAuthService_Login(t *testing.T) {
 					return nil
 				},
 			},
-			false,
-			repositoryMockErr,
+			wantData: false,
+			wantErr:  repositoryMockErr,
 		},
 	}
 
@@ -145,6 +145,7 @@ func TestAuthService_Login(t *testing.T) {
 		})
 	}
 }
+
 func TestAuthService_RefreshAccessToken(t *testing.T) {
 	type args struct {
 		refreshCredentials refreshCredentials
@@ -157,8 +158,8 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			"user can successfully refresh token and get new token pair",
-			RepositoryMock{
+			name: "user can successfully refresh token and get new token pair",
+			repository: RepositoryMock{
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
 					return nil
 				},
@@ -177,18 +178,18 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 					return nil
 				},
 			},
-			args{
+			args: args{
 				refreshCredentials{
 					RefreshToken: "07c40c34-c07d-11eb-a218-acde48001122",
 					UserAgent:    "Insomnia",
 					IP:           "127.0.0.1",
 				}},
-			true,
-			nil,
+			wantData: true,
+			wantErr:  nil,
 		},
 		{
-			"session already expired",
-			RepositoryMock{
+			name: "session already expired",
+			repository: RepositoryMock{
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
 					return nil
 				},
@@ -210,18 +211,18 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 					return 10, nil
 				},
 			},
-			args{
+			args: args{
 				refreshCredentials{
 					RefreshToken: "07c40c34-c07d-11eb-a218-acde48001122",
 					UserAgent:    "Insomnia",
 					IP:           "127.0.0.1",
 				}},
-			false,
-			expiredSessionErr,
+			wantData: false,
+			wantErr:  expiredSessionErr,
 		},
 		{
-			"session could not be created",
-			RepositoryMock{
+			name: "session could not be created",
+			repository: RepositoryMock{
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
 					return createSessionErr
 				},
@@ -233,25 +234,25 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 						Exp:          time.Now().Add(time.Hour),
 						IP:           "127.0.0.1",
 						UserAgent:    "Insomnia",
-						CreatedAt:    test.Time(2020),
+						CreatedAt:    test.Time(2021),
 					}, nil
 				},
 				DeleteSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) error {
 					return nil
 				},
 			},
-			args{
+			args: args{
 				refreshCredentials{
 					RefreshToken: "07c40c34-c07d-11eb-a218-acde48001122",
 					UserAgent:    "Insomnia",
 					IP:           "127.0.0.1",
 				}},
-			false,
-			createSessionErr,
+			wantData: false,
+			wantErr:  createSessionErr,
 		},
 		{
-			"refresh token already expired",
-			RepositoryMock{
+			name: "refresh token already expired",
+			repository: RepositoryMock{
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
 					return nil
 				},
@@ -263,21 +264,24 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 						Exp:          time.Now(),
 						IP:           "127.0.0.1",
 						UserAgent:    "Insomnia",
-						CreatedAt:    test.Time(2020),
+						CreatedAt:    test.Time(2021),
 					}, nil
 				},
 				DeleteSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) error {
 					return nil
 				},
+				DeleteSessionByUserIDFn: func(ctx context.Context, userID int) (int64, error) {
+					return 1, nil
+				},
 			},
-			args{
+			args: args{
 				refreshCredentials{
 					RefreshToken: "07c40c34-c07d-11eb-a218-acde48001122",
 					UserAgent:    "Insomnia",
 					IP:           "127.0.0.1",
 				}},
-			false,
-			expiredSessionErr,
+			wantData: false,
+			wantErr:  expiredSessionErr,
 		},
 	}
 
@@ -294,6 +298,7 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 
 func TestAuthService_Logout(t *testing.T) {
 	type args struct {
+		refreshToken string
 	}
 
 	cases := []struct {
@@ -303,32 +308,36 @@ func TestAuthService_Logout(t *testing.T) {
 		wantErr    error
 	}{
 		{
-			"user can successfully logout",
-			args{},
-			RepositoryMock{
+			name: "user can successfully logout",
+			args: args{
+				refreshToken: "d5586222-c306-11eb-96c1-acde48001122",
+			},
+			repository: RepositoryMock{
 				DeleteSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) error {
 					return nil
 				},
 			},
-			nil,
+			wantErr: nil,
 		},
 		{
-			"repository error",
-			args{},
-			RepositoryMock{
+			name: "repository error",
+			args: args{
+				refreshToken: "d5586222-c306-11eb-96c1-acde48001122",
+			},
+			repository: RepositoryMock{
 				DeleteSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) error {
 					return repositoryMockErr
 				},
 			},
-			nil,
+			wantErr: repositoryMockErr,
 		},
 	}
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			service := NewService("jwt_test", tc.repository)
-			err := service.Logout(context.Background(), "d5586222-c306-11eb-96c1-acde48001122")
-			assert.Equal(t, tc.wantErr, err != nil)
+			err := service.Logout(context.Background(), tc.args.refreshToken)
+			assert.Equal(t, tc.wantErr, err)
 		})
 	}
 }

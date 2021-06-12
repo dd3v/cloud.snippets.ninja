@@ -66,15 +66,15 @@ func (s service) Create(context context.Context, snippet entity.Snippet) (entity
 }
 
 func (s service) Update(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error) {
-	record, err := s.repository.GetByID(ctx, snippet.ID)
+	_, err := s.repository.GetByID(ctx, snippet.ID)
 	if err != nil {
 		return entity.Snippet{}, err
 	}
-	if err := s.rbac.CanUpdateSnippet(ctx, record); err != nil {
+	if err := s.rbac.CanUpdateSnippet(ctx, snippet); err != nil {
 		return entity.Snippet{}, err
 	}
-	record.Load(snippet)
-	err = s.repository.Update(ctx, record)
+
+	err = s.repository.Update(ctx, snippet)
 	if err != nil {
 		return entity.Snippet{}, err
 	}

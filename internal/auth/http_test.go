@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/internal/test"
 	"net/http"
@@ -11,12 +12,13 @@ import (
 
 func TestHTTP_Login(t *testing.T) {
 	cases := []struct {
-		request        test.APITestCase
-		repositoryMock Repository
+		name       string
+		request    test.APITestCase
+		repository Repository
 	}{
 		{
+			name: "user can login",
 			request: test.APITestCase{
-				Name:         "user can login",
 				Method:       http.MethodPost,
 				URL:          "/auth/login",
 				Body:         `{"login":"dd3v", "password":"qwerty"}`,
@@ -24,7 +26,7 @@ func TestHTTP_Login(t *testing.T) {
 				WantStatus:   http.StatusOK,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, value string) (entity.User, error) {
 					return entity.User{
 						ID:           1,
@@ -44,8 +46,8 @@ func TestHTTP_Login(t *testing.T) {
 			},
 		},
 		{
+			name: "validation error",
 			request: test.APITestCase{
-				Name:         "validation error",
 				Method:       http.MethodPost,
 				URL:          "/auth/login",
 				Body:         `{"login":"dd3v", "password":"test"}`,
@@ -53,7 +55,7 @@ func TestHTTP_Login(t *testing.T) {
 				WantStatus:   http.StatusBadRequest,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, value string) (entity.User, error) {
 					return entity.User{
 						ID:           1,
@@ -73,8 +75,8 @@ func TestHTTP_Login(t *testing.T) {
 			},
 		},
 		{
+			name: "user repository error",
 			request: test.APITestCase{
-				Name:         "user repository error",
 				Method:       http.MethodPost,
 				URL:          "/auth/login",
 				Body:         `{"login":"dd3v", "password":"qwerty"}`,
@@ -82,7 +84,7 @@ func TestHTTP_Login(t *testing.T) {
 				WantStatus:   http.StatusInternalServerError,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, value string) (entity.User, error) {
 					return entity.User{}, repositoryMockErr
 				},
@@ -95,8 +97,8 @@ func TestHTTP_Login(t *testing.T) {
 			},
 		},
 		{
+			name: "session repository error",
 			request: test.APITestCase{
-				Name:         "session repository error",
 				Method:       http.MethodPost,
 				URL:          "/auth/login",
 				Body:         `{"login":"dd3v", "password":"qwerty"}`,
@@ -104,7 +106,7 @@ func TestHTTP_Login(t *testing.T) {
 				WantStatus:   http.StatusInternalServerError,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, value string) (entity.User, error) {
 					return entity.User{
 						ID:           1,
@@ -126,21 +128,22 @@ func TestHTTP_Login(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		service := NewService("jwt_test_key", tc.repositoryMock)
+		service := NewService("jwt_test_key", tc.repository)
 		router := test.MockRouter()
 		NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
-		test.Endpoint(t, router, tc.request)
+		test.Endpoint(t, tc.name, router, tc.request)
 	}
 }
 
 func TestHTTP_RefreshToken(t *testing.T) {
 	cases := []struct {
-		request        test.APITestCase
-		repositoryMock Repository
+		name       string
+		request    test.APITestCase
+		repository Repository
 	}{
 		{
+			name: "user can refresh token",
 			request: test.APITestCase{
-				Name:         "user can refresh token",
 				Method:       http.MethodPost,
 				URL:          "/auth/refresh",
 				Body:         `{"refresh_token":"d5586222-c306-11eb-96c1-acde48001122"}`,
@@ -148,7 +151,7 @@ func TestHTTP_RefreshToken(t *testing.T) {
 				WantStatus:   http.StatusOK,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) (entity.Session, error) {
 					return entity.Session{
 						ID:           1,
@@ -172,8 +175,8 @@ func TestHTTP_RefreshToken(t *testing.T) {
 			},
 		},
 		{
+			name: "refresh token expired",
 			request: test.APITestCase{
-				Name:         "refresh token expired",
 				Method:       http.MethodPost,
 				URL:          "/auth/refresh",
 				Body:         `{"refresh_token":"d5586222-c306-11eb-96c1-acde48001122"}`,
@@ -181,7 +184,7 @@ func TestHTTP_RefreshToken(t *testing.T) {
 				WantStatus:   http.StatusForbidden,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) (entity.Session, error) {
 					return entity.Session{
 						ID:           1,
@@ -205,8 +208,8 @@ func TestHTTP_RefreshToken(t *testing.T) {
 			},
 		},
 		{
+			name: "refresh by non-existent",
 			request: test.APITestCase{
-				Name:         "refresh by non-existent",
 				Method:       http.MethodPost,
 				URL:          "/auth/refresh",
 				Body:         `{"refresh_token":"d5586222-c306-11eb-96c1-acde48001122"}`,
@@ -214,9 +217,9 @@ func TestHTTP_RefreshToken(t *testing.T) {
 				WantStatus:   http.StatusForbidden,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) (entity.Session, error) {
-					return entity.Session{}, repositoryMockErr
+					return entity.Session{}, sql.ErrNoRows
 				},
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
 					return nil
@@ -230,8 +233,8 @@ func TestHTTP_RefreshToken(t *testing.T) {
 			},
 		},
 		{
+			name: "repository error",
 			request: test.APITestCase{
-				Name:         "repository error",
 				Method:       http.MethodPost,
 				URL:          "/auth/refresh",
 				Body:         `{"refresh_token":"d5586222-c306-11eb-96c1-acde48001122"}`,
@@ -239,7 +242,7 @@ func TestHTTP_RefreshToken(t *testing.T) {
 				WantStatus:   http.StatusInternalServerError,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				GetSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) (entity.Session, error) {
 					return entity.Session{
 						ID:           1,
@@ -265,21 +268,22 @@ func TestHTTP_RefreshToken(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		service := NewService("jwt_test_key", tc.repositoryMock)
+		service := NewService("jwt_test_key", tc.repository)
 		router := test.MockRouter()
 		NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
-		test.Endpoint(t, router, tc.request)
+		test.Endpoint(t, tc.name, router, tc.request)
 	}
 }
 
 func TestHTTP_Logout(t *testing.T) {
 	cases := []struct {
-		request        test.APITestCase
-		repositoryMock Repository
+		name       string
+		request    test.APITestCase
+		repository Repository
 	}{
 		{
+			name: "user can logout",
 			request: test.APITestCase{
-				Name:         "user can logout",
 				Method:       http.MethodPost,
 				URL:          "/auth/logout",
 				Body:         `{"refresh_token":"d5586222-c306-11eb-96c1-acde48001122"}`,
@@ -287,15 +291,15 @@ func TestHTTP_Logout(t *testing.T) {
 				WantStatus:   http.StatusOK,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				DeleteSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) error {
 					return nil
 				},
 			},
 		},
 		{
+			name: "unauthorized request",
 			request: test.APITestCase{
-				Name:         "unauthorized request",
 				Method:       http.MethodPost,
 				URL:          "/auth/logout",
 				Body:         `{"refresh_token":"d5586222-c306-11eb-96c1-acde48001122"}`,
@@ -303,7 +307,7 @@ func TestHTTP_Logout(t *testing.T) {
 				WantStatus:   http.StatusUnauthorized,
 				WantResponse: "",
 			},
-			repositoryMock: RepositoryMock{
+			repository: RepositoryMock{
 				DeleteSessionByRefreshTokenFn: func(ctx context.Context, refreshToken string) error {
 					return nil
 				},
@@ -312,9 +316,9 @@ func TestHTTP_Logout(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		service := NewService("jwt_test_key", tc.repositoryMock)
+		service := NewService("jwt_test_key", tc.repository)
 		router := test.MockRouter()
 		NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
-		test.Endpoint(t, router, tc.request)
+		test.Endpoint(t, tc.name, router, tc.request)
 	}
 }
