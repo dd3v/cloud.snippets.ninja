@@ -15,20 +15,20 @@ func New() RBAC {
 }
 
 func (r RBAC) CanViewSnippet(ctx context.Context, snippet entity.Snippet) error {
-	return r.isOwner(r.GetUserID(ctx), snippet.GetOwnerID(), snippet.IsPublic())
+	return r.isOwner(r.GetUserID(ctx), snippet.GetOwnerID())
 }
 
 func (r RBAC) CanUpdateSnippet(ctx context.Context, snippet entity.Snippet) error {
-	return r.isOwner(r.GetUserID(ctx), snippet.GetOwnerID(), snippet.IsPublic())
+	return r.isOwner(r.GetUserID(ctx), snippet.GetOwnerID())
 
 }
 
 func (r RBAC) CanDeleteSnippet(ctx context.Context, snippet entity.Snippet) error {
-	return r.isOwner(r.GetUserID(ctx), snippet.GetOwnerID(), snippet.IsPublic())
+	return r.isOwner(r.GetUserID(ctx), snippet.GetOwnerID())
 }
 
-func (r RBAC) isOwner(userID int, ownerID int, public bool) error {
-	if userID == ownerID || public == true {
+func (r RBAC) isOwner(userID int, ownerID int) error {
+	if userID == ownerID {
 		return nil
 	}
 	return AccessError
