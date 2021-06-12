@@ -2,70 +2,36 @@ package user
 
 import (
 	"context"
-	"database/sql"
 	"errors"
-
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 )
 
-var errorRepository = errors.New("error repository")
+var repositoryMockErr = errors.New("error repository")
 
-type UserMemoryRepository struct {
-	items []entity.User
+type RepositoryMock struct {
+	GetByIDFn func(ctx context.Context, id int) (entity.User, error)
+	CreateFn  func(ctx context.Context, user entity.User) (entity.User, error)
+	UpdateFn  func(ctx context.Context, user entity.User) error
+	DeleteFn  func(ctx context.Context, id int) error
+	ExistsFn  func(ctx context.Context, field string, value string) (bool, error)
 }
 
-func NewMockRepository(items []entity.User) UserMemoryRepository {
-	r := UserMemoryRepository{}
-	r.items = items
-	return r
+func (r RepositoryMock) GetByID(ctx context.Context, id int) (entity.User, error) {
+	return r.GetByIDFn(ctx, id)
 }
 
-func (r UserMemoryRepository) List(ctx context.Context, limit int, offset int) ([]entity.User, error) {
-	return r.items, nil
+func (r RepositoryMock) Create(ctx context.Context, user entity.User) (entity.User, error) {
+	return r.CreateFn(ctx, user)
 }
 
-func (r UserMemoryRepository) GetByID(ctx context.Context, id int) (entity.User, error) {
-	var user entity.User
-	for i, item := range r.items {
-		if item.ID == id {
-			return r.items[i], nil
-		}
-	}
-	return user, sql.ErrNoRows
+func (r RepositoryMock) Update(ctx context.Context, user entity.User) error {
+	return r.UpdateFn(ctx, user)
 }
 
-func (r UserMemoryRepository) Create(ctx context.Context, user entity.User) (entity.User, error) {
-	if user.Login == "error" {
-		return entity.User{}, errorRepository
-	}
-	r.items = append(r.items, user)
-	return user, nil
+func (r RepositoryMock) Delete(ctx context.Context, id int) error {
+	return r.DeleteFn(ctx, id)
 }
 
-func (r UserMemoryRepository) Update(ctx context.Context, user entity.User) error {
-	if user.Login == "error" {
-		return errorRepository
-	}
-	for i, item := range r.items {
-		if item.ID == user.ID {
-			r.items[i] = user
-			break
-		}
-	}
-	return nil
-}
-
-func (r UserMemoryRepository) Delete(ctx context.Context, id int) error {
-	for i, item := range r.items {
-		if item.ID == id {
-			r.items[i] = r.items[len(r.items)-1]
-			r.items = r.items[:len(r.items)-1]
-			break
-		}
-	}
-	return nil
-}
-
-func (r UserMemoryRepository) Count(ctx context.Context) (int, error) {
-	return len(r.items), nil
+func (r RepositoryMock) Exists(ctx context.Context, field string, value string) (bool, error) {
+	return r.ExistsFn(ctx, field, value)
 }

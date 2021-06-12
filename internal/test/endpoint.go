@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -39,6 +40,7 @@ func Endpoint(t *testing.T, name string, router *routing.Router, tc APITestCase)
 		res := httptest.NewRecorder()
 		router.ServeHTTP(res, req)
 		assert.Equal(t, tc.WantStatus, res.Code)
+		fmt.Println(res)
 		if tc.WantResponse != "" {
 			pattern := strings.Trim(tc.WantResponse, "*")
 			if pattern != tc.WantResponse {

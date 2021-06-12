@@ -2,7 +2,7 @@ package user
 
 import (
 	"net/http"
-	"strconv"
+	"time"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/internal/errors"
@@ -21,8 +21,6 @@ func NewHTTPHandler(router *routing.RouteGroup, jwtAuthMiddleware routing.Handle
 	router.Post("/users", r.create)
 	router.Use(jwtAuthMiddleware)
 	router.Get("/users/me", r.me)
-	router.Get("/users/<id>", r.get)
-	router.Put("/users/me", r.update)
 }
 
 func (r resource) create(c *routing.Context) error {
@@ -34,7 +32,28 @@ func (r resource) create(c *routing.Context) error {
 	if err != nil {
 		return err
 	}
-	user, err := r.service.Create(c.Request.Context(), request)
+
+	if exists, err := r.service.Exists(c.Request.Context(), "email", request.Email); err != nil {
+		return errors.InternalServerError(err.Error())
+	} else if exists {
+		return errors.BadRequest("email should be unique")
+	}
+
+	if exists, err := r.service.Exists(c.Request.Context(), "login", request.Login); err != nil {
+		return errors.InternalServerError(err.Error())
+	} else if exists {
+		return errors.BadRequest("login should be unique")
+	}
+
+	user := entity.User{
+		Password:  request.Password,
+		Login:     request.Login,
+		Email:     request.Email,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	user, err = r.service.Create(c.Request.Context(), user)
 	if err != nil {
 		return err
 	}
@@ -48,32 +67,4 @@ func (r resource) me(c *routing.Context) error {
 		return err
 	}
 	return c.Write(me)
-}
-
-func (r resource) get(c *routing.Context) error {
-	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		return err
-	}
-	user, err := r.service.GetByID(c.Request.Context(), id)
-	if err != nil {
-		return err
-	}
-	return c.Write(user.GetPublicProfile())
-}
-
-func (r resource) update(c *routing.Context) error {
-	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
-	var request updateRequest
-	if err := c.Read(&request); err != nil {
-		return errors.BadRequest("")
-	}
-	if err := request.Validate(); err != nil {
-		return err
-	}
-	user, err := r.service.Update(c.Request.Context(), identity.GetID(), request)
-	if err != nil {
-		return err
-	}
-	return c.Write(user)
 }

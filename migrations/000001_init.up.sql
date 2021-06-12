@@ -27,15 +27,16 @@ CREATE TABLE `snippets`
 
 CREATE TABLE `users`
 (
-    `id`            int          NOT NULL AUTO_INCREMENT,
-    `password_hash` varchar(60)  NOT NULL,
-    `login`         varchar(100) NOT NULL,
-    `email`         varchar(100) NOT NULL,
-    `created_at`    datetime     NOT NULL,
-    `updated_at`    datetime     NOT NULL,
+    `id`         int          NOT NULL AUTO_INCREMENT,
+    `password`   varchar(60)  NOT NULL,
+    `login`      varchar(100) NOT NULL,
+    `email`      varchar(100) NOT NULL,
+    `created_at` datetime     NOT NULL,
+    `updated_at` datetime     NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `email_idx` (`email`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+    UNIQUE KEY `email_idx` (`email`) USING BTREE,
+    UNIQUE KEY `login_idx` (`login`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
 
 
 CREATE

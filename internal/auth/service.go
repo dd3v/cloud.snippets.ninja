@@ -85,7 +85,7 @@ func (s service) Login(ctx context.Context, credentials authCredentials) (entity
 			return entity.TokenPair{}, err
 		}
 	}
-	if security.CompareHashAndPassword(user.PasswordHash, credentials.Password) == true {
+	if security.CompareHashAndPassword(user.Password, credentials.Password) == true {
 		accessToken, err := s.generateAccessToken(user.ID)
 		if err != nil {
 			return entity.TokenPair{}, err

@@ -2,27 +2,20 @@ package user
 
 import (
 	"context"
+	dbx "github.com/go-ozzo/ozzo-dbx"
 
 	"github.com/dd3v/snippets.page.backend/internal/entity"
 	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
 )
 
-
 type repository struct {
 	db *dbcontext.DB
 }
 
-//NewMockRepository - ...
 func NewRepository(db *dbcontext.DB) Repository {
 	return repository{
 		db: db,
 	}
-}
-
-func (r repository) List(ctx context.Context, limit int, offset int) ([]entity.User, error) {
-	var users []entity.User
-	err := r.db.With(ctx).Select().Limit(int64(limit)).Offset(int64(offset)).OrderBy("id").All(&users)
-	return users, err
 }
 
 func (r repository) GetByID(ctx context.Context, id int) (entity.User, error) {
@@ -48,8 +41,14 @@ func (r repository) Delete(ctx context.Context, id int) error {
 	return r.db.With(ctx).Model(&user).Delete()
 }
 
-func (r repository) Count(ctx context.Context) (int, error) {
+func (r repository) Exists(ctx context.Context, field string, value string) (bool, error) {
 	var count int
-	err := r.db.With(ctx).Select("COUNT(*)").From("users").Row(&count)
-	return count, err
+	var exists bool
+	err := r.db.With(ctx).Select("COUNT(*)").From("users").Where(dbx.HashExp{field: value}).Row(&count)
+	if count == 0 {
+		exists = false
+	} else {
+		exists = true
+	}
+	return exists, err
 }
