@@ -3,8 +3,8 @@ package snippet
 import (
 	"testing"
 
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/pkg/datatype"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/pkg/datatype"
 	"github.com/stretchr/testify/assert"
 )
 

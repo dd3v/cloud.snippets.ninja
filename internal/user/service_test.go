@@ -2,8 +2,8 @@ package user
 
 import (
 	"context"
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/internal/test"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/internal/test"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )

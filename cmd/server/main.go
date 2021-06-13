@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/dd3v/snippets.page.backend/internal/rbac"
+	"github.com/dd3v/snippets.ninja/internal/rbac"
 	"log"
 	"net/http"
 	"os"
@@ -12,12 +12,12 @@ import (
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	"github.com/go-ozzo/ozzo-routing/v2/content"
 
-	"github.com/dd3v/snippets.page.backend/internal/auth"
-	"github.com/dd3v/snippets.page.backend/internal/config"
-	"github.com/dd3v/snippets.page.backend/internal/errors"
-	"github.com/dd3v/snippets.page.backend/internal/snippet"
-	"github.com/dd3v/snippets.page.backend/internal/user"
-	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
+	"github.com/dd3v/snippets.ninja/internal/auth"
+	"github.com/dd3v/snippets.ninja/internal/config"
+	"github.com/dd3v/snippets.ninja/internal/errors"
+	"github.com/dd3v/snippets.ninja/internal/snippet"
+	"github.com/dd3v/snippets.ninja/internal/user"
+	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/go-sql-driver/mysql"
 )

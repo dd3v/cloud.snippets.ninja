@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/BurntSushi/toml"
-	"github.com/dd3v/snippets.page.backend/internal/config"
-	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
+	"github.com/dd3v/snippets.ninja/internal/config"
+	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/go-sql-driver/mysql"
 

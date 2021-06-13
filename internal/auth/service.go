@@ -6,9 +6,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/internal/errors"
-	"github.com/dd3v/snippets.page.backend/pkg/security"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/internal/errors"
+	"github.com/dd3v/snippets.ninja/pkg/security"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )

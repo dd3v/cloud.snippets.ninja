@@ -3,7 +3,7 @@ package errors
 import (
 	"database/sql"
 	"errors"
-	"github.com/dd3v/snippets.page.backend/internal/rbac"
+	"github.com/dd3v/snippets.ninja/internal/rbac"
 	"log"
 	"net/http"
 

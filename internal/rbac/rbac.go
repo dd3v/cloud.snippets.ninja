@@ -3,7 +3,7 @@ package rbac
 import (
 	"context"
 	"errors"
-	"github.com/dd3v/snippets.page.backend/internal/entity"
+	"github.com/dd3v/snippets.ninja/internal/entity"
 )
 
 type RBAC struct{}

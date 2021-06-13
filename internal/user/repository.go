@@ -4,8 +4,8 @@ import (
 	"context"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/pkg/dbcontext"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
 )
 
 type repository struct {

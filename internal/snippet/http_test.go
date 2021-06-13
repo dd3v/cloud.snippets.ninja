@@ -3,10 +3,10 @@ package snippet
 import (
 	"context"
 	"database/sql"
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/internal/rbac"
-	"github.com/dd3v/snippets.page.backend/internal/test"
-	"github.com/dd3v/snippets.page.backend/pkg/query"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/internal/rbac"
+	"github.com/dd3v/snippets.ninja/internal/test"
+	"github.com/dd3v/snippets.ninja/pkg/query"
 	"net/http"
 	"testing"
 )

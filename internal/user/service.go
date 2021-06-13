@@ -2,8 +2,8 @@ package user
 
 import (
 	"context"
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/pkg/security"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/pkg/security"
 )
 
 //Service - ...

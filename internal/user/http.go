@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/internal/errors"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/internal/errors"
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 )
 

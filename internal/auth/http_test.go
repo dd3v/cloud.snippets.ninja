@@ -3,8 +3,8 @@ package auth
 import (
 	"context"
 	"database/sql"
-	"github.com/dd3v/snippets.page.backend/internal/entity"
-	"github.com/dd3v/snippets.page.backend/internal/test"
+	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/snippets.ninja/internal/test"
 	"net/http"
 	"testing"
 	"time"
@@ -29,12 +29,12 @@ func TestHTTP_Login(t *testing.T) {
 			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, value string) (entity.User, error) {
 					return entity.User{
-						ID:           1,
-						PasswordHash: "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
-						Login:        "dd3v",
-						Email:        "test@test.com",
-						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2020),
+						ID:        1,
+						Password:  "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
+						Login:     "dd3v",
+						Email:     "test@test.com",
+						CreatedAt: test.Time(2020),
+						UpdatedAt: test.Time(2020),
 					}, nil
 				},
 				DeleteSessionByUserIDAndUserAgentFn: func(ctx context.Context, userID int, userAgent string) error {
@@ -58,12 +58,12 @@ func TestHTTP_Login(t *testing.T) {
 			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, value string) (entity.User, error) {
 					return entity.User{
-						ID:           1,
-						PasswordHash: "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
-						Login:        "dd3v",
-						Email:        "test@test.com",
-						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2020),
+						ID:        1,
+						Password:  "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
+						Login:     "dd3v",
+						Email:     "test@test.com",
+						CreatedAt: test.Time(2020),
+						UpdatedAt: test.Time(2020),
 					}, nil
 				},
 				DeleteSessionByUserIDAndUserAgentFn: func(ctx context.Context, userID int, userAgent string) error {
@@ -109,12 +109,12 @@ func TestHTTP_Login(t *testing.T) {
 			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, value string) (entity.User, error) {
 					return entity.User{
-						ID:           1,
-						PasswordHash: "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
-						Login:        "dd3v",
-						Email:        "test@test.com",
-						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2020),
+						ID:        1,
+						Password:  "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
+						Login:     "dd3v",
+						Email:     "test@test.com",
+						CreatedAt: test.Time(2020),
+						UpdatedAt: test.Time(2020),
 					}, nil
 				},
 				DeleteSessionByUserIDAndUserAgentFn: func(ctx context.Context, userID int, userAgent string) error {

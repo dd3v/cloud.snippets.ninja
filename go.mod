@@ -1,4 +1,4 @@
-module github.com/dd3v/snippets.page.backend
+module github.com/dd3v/snippets.ninja
 
 go 1.13
 
@@ -19,6 +19,5 @@ require (
 	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/guregu/null.v4 v4.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210105161348-2e78108cf5f8 // indirect
 )
