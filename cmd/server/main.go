@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"flag"
 	"fmt"
 	"github.com/dd3v/snippets.ninja/internal/rbac"
-	"log"
+	"github.com/dd3v/snippets.ninja/pkg/accesslog"
+	"github.com/dd3v/snippets.ninja/pkg/log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	routing "github.com/go-ozzo/ozzo-routing/v2"
@@ -33,16 +37,34 @@ func init() {
 func main() {
 	config := config.NewConfig()
 	_, err := toml.DecodeFile(configPath, config)
+	logger := log.New([]string{
+		"stdout",
+	})
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err)
+		os.Exit(-1)
 	}
 	mysql, err := dbx.MustOpen("mysql", config.DatabaseDNS)
 	if err != nil {
-		fmt.Printf("mysql connection error: %s", err)
+		logger.Errorf("DB connection error %v", err)
+	}
+	mysql.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
+		if err == nil {
+			logger.With(ctx, "duration", t.Milliseconds(), "sql", sql).Info("DB query successful")
+		} else {
+			logger.With(ctx, "sql", sql).Errorf("DB query error: %v", err)
+		}
+	}
+	mysql.QueryLogFunc = func(ctx context.Context, t time.Duration, sql string, rows *sql.Rows, err error) {
+		if err == nil {
+			logger.With(ctx, "duration", t.Milliseconds(), "sql", sql).Info("DB query successful")
+		} else {
+			logger.With(ctx, "sql", sql).Errorf("DB query error: %v", err)
+		}
 	}
 	defer func() {
 		if err := mysql.Close(); err != nil {
-			fmt.Printf("mysql runtime error: %s", err)
+			logger.Error(err)
 		}
 	}()
 	db := dbcontext.New(mysql)
@@ -51,6 +73,7 @@ func main() {
 	jwtAuthMiddleware := auth.GetJWTMiddleware(config.JWTSigningKey)
 	router := routing.New()
 	router.Use(
+		accesslog.Handler(logger),
 		content.TypeNegotiator(content.JSON),
 		errors.Handler(),
 	)
@@ -58,7 +81,7 @@ func main() {
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 	user.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, userService)
-	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, auth.NewService(config.JWTSigningKey, auth.NewRepository(db)))
+	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, auth.NewService(config.JWTSigningKey, auth.NewRepository(db), logger))
 	snippet.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, snippet.NewService(
 		snippet.NewRepository(db),
 		rbac,

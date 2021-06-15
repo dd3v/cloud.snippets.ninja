@@ -3,7 +3,9 @@ package auth
 import (
 	"context"
 	"database/sql"
-	"log"
+	"fmt"
+	"github.com/dd3v/snippets.ninja/pkg/log"
+
 	"time"
 
 	"github.com/dd3v/snippets.ninja/internal/entity"
@@ -17,7 +19,7 @@ var (
 	authErr            = errors.Unauthorized("auth: invalid login or password")
 	createSessionErr   = errors.InternalServerError("auth: session create error")
 	expiredSessionErr  = errors.Forbidden("auth: session already expired")
-	sessionNotFoundErr = errors.Forbidden("auth: access denied")
+	sessionNotFoundErr = errors.Forbidden("auth: accesslog denied")
 )
 
 //Service - ...
@@ -59,13 +61,15 @@ type userClaims struct {
 type service struct {
 	jwtSigningKey string
 	repository    Repository
+	logger        log.Logger
 }
 
 //NewService - ...
-func NewService(JWTSigningKey string, repository Repository) Service {
+func NewService(JWTSigningKey string, repository Repository, logger log.Logger) Service {
 	return service{
 		jwtSigningKey: JWTSigningKey,
 		repository:    repository,
+		logger:        logger,
 	}
 }
 
@@ -80,10 +84,14 @@ func (s service) Login(ctx context.Context, credentials authCredentials) (entity
 	user, err := s.repository.GetUserByLoginOrEmail(ctx, credentials.User)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			s.logger.With(ctx).Info("Security alert. User not found")
 			return entity.TokenPair{}, authErr
+
 		} else {
 			return entity.TokenPair{}, err
 		}
+		fmt.Println("FUUUK")
+
 	}
 	if security.CompareHashAndPassword(user.Password, credentials.Password) == true {
 		accessToken, err := s.generateAccessToken(user.ID)
@@ -116,7 +124,7 @@ func (s service) Login(ctx context.Context, credentials authCredentials) (entity
 			RefreshToken: refreshToken,
 		}, nil
 	} else {
-		log.Printf("Security alert. Invalid login or password")
+		s.logger.With(ctx).Info("Security alert. Invalid password")
 	}
 	return entity.TokenPair{}, authErr
 }
@@ -125,7 +133,7 @@ func (s service) Refresh(ctx context.Context, credentials refreshCredentials) (e
 	session, err := s.repository.GetSessionByRefreshToken(ctx, credentials.RefreshToken)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Println("Security alert. Refresh sessions not found")
+			s.logger.Info("Security alert. Refresh sessions not found")
 			return entity.TokenPair{}, sessionNotFoundErr
 		}
 		return entity.TokenPair{}, err
@@ -160,7 +168,7 @@ func (s service) Refresh(ctx context.Context, credentials refreshCredentials) (e
 	} else {
 		//if refresh token is expired just remove all sessions
 		if sessionsCount, err := s.repository.DeleteSessionByUserID(ctx, session.UserID); err == nil {
-			log.Printf("Security alert. Remove all sessions by user id. Total: %d", sessionsCount)
+			s.logger.Info("Security alert. Remove all sessions by user id. Total: %d", sessionsCount)
 		}
 	}
 	return entity.TokenPair{}, expiredSessionErr

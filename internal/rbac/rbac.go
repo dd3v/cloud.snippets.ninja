@@ -8,7 +8,7 @@ import (
 
 type RBAC struct{}
 
-var AccessError = errors.New("access denied")
+var AccessError = errors.New("accesslog denied")
 
 func New() RBAC {
 	return RBAC{}
