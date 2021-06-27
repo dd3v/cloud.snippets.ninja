@@ -12,6 +12,7 @@ type list struct {
 	Favorite    bool   `form:"favorite"`
 	AccessLevel int    `form:"access_level"`
 	Title       string `form:"title"`
+	Tags        string `form:"tags"`
 	SortBy      string `form:"sort_by"`
 	OrderBy     string `form:"order_by"`
 	Page        int    `form:"page"`
@@ -29,11 +30,15 @@ func (l list) filterConditions() map[string]string {
 	if l.Title != "" {
 		conditions["title"] = l.Title
 	}
+	if l.Tags != "" {
+		conditions["tags"] = l.Tags
+	}
+
 	return conditions
 }
 
 func newList() list {
-	return list{Favorite: false, AccessLevel: -1, Title: "", SortBy: "id", OrderBy: "desc", Page: 1, Limit: 50}
+	return list{Favorite: false, AccessLevel: -1, Title: "", Tags: "", SortBy: "id", OrderBy: "desc", Page: 1, Limit: 50}
 }
 
 func (l list) validate() error {
@@ -53,6 +58,7 @@ type snippet struct {
 	AccessLevel         int                        `json:"access_level"`
 	Title               string                     `json:"title"`
 	Content             string                     `json:"content"`
+	Tags                entity.Tags                `json:"tags"`
 	Language            string                     `json:"language"`
 	CustomEditorOptions entity.CustomEditorOptions `json:"custom_editor_options"`
 }

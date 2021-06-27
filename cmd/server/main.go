@@ -35,8 +35,8 @@ func init() {
 }
 
 func main() {
-	config := config.NewConfig()
-	_, err := toml.DecodeFile(configPath, config)
+	cfg := config.NewConfig()
+	_, err := toml.DecodeFile(configPath, cfg)
 	logger := log.New([]string{
 		"stdout",
 	})
@@ -44,7 +44,7 @@ func main() {
 		logger.Error(err)
 		os.Exit(-1)
 	}
-	mysql, err := dbx.MustOpen("mysql", config.DatabaseDNS)
+	mysql, err := dbx.MustOpen("mysql", cfg.DatabaseDNS)
 	if err != nil {
 		logger.Errorf("DB connection error %v", err)
 	}
@@ -70,7 +70,7 @@ func main() {
 	db := dbcontext.New(mysql)
 	rbac := rbac.New()
 
-	jwtAuthMiddleware := auth.GetJWTMiddleware(config.JWTSigningKey)
+	jwtAuthMiddleware := auth.GetJWTMiddleware(cfg.JWTSigningKey)
 	router := routing.New()
 	router.Use(
 		accesslog.Handler(logger),
@@ -81,12 +81,12 @@ func main() {
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 	user.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, userService)
-	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, auth.NewService(config.JWTSigningKey, auth.NewRepository(db), logger))
+	auth.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, auth.NewService(cfg.JWTSigningKey, auth.NewRepository(db), logger))
 	snippet.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, snippet.NewService(
 		snippet.NewRepository(db),
 		rbac,
 	))
-	address := fmt.Sprintf(":%v", config.BindAddr)
+	address := fmt.Sprintf(":%v", cfg.BindAddr)
 	httpServer := &http.Server{
 		Addr:    address,
 		Handler: router,

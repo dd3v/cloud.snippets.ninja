@@ -29,7 +29,6 @@ type RBAC interface {
 	CanViewSnippet(ctx context.Context, snippet entity.Snippet) error
 	CanDeleteSnippet(ctx context.Context, snippet entity.Snippet) error
 	CanUpdateSnippet(ctx context.Context, snippet entity.Snippet) error
-	GetUserID(ctx context.Context) int
 }
 
 type service struct {

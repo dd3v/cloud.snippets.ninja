@@ -8,7 +8,7 @@ CREATE TABLE `sessions`
     `user_agent`    varchar(500) NOT NULL,
     `created_at`    datetime     NOT NULL,
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `snippets`
 (
@@ -18,12 +18,13 @@ CREATE TABLE `snippets`
     `access_level`          tinyint(1) NOT NULL DEFAULT '0',
     `title`                 varchar(500) NOT NULL,
     `content`               text         NOT NULL,
+    `tags`                  json NULL,
     `language`              varchar(20)  NOT NULL,
     `custom_editor_options` json         NOT NULL,
     `created_at`            datetime     NOT NULL,
     `updated_at`            datetime     NOT NULL,
     PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE `users`
 (
@@ -36,8 +37,7 @@ CREATE TABLE `users`
     PRIMARY KEY (`id`),
     UNIQUE KEY `email_idx` (`email`) USING BTREE,
     UNIQUE KEY `login_idx` (`login`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
-CREATE
-FULLTEXT INDEX `title_content` ON snippets(title,content)
+CREATE FULLTEXT INDEX `title_content` ON snippets(title,content)

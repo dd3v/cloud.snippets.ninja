@@ -14,11 +14,14 @@ type Snippet struct {
 	AccessLevel         int                 `json:"access_level"`
 	Title               string              `json:"title"`
 	Content             string              `json:"content"`
+	Tags                Tags                `json:"tags" db:"tags"`
 	Language            string              `json:"language"`
 	CustomEditorOptions CustomEditorOptions `json:"custom_editor_options" db:"custom_editor_options"`
 	CreatedAt           time.Time           `json:"created_at"`
 	UpdatedAt           time.Time           `json:"updated_at"`
 }
+
+type Tags []string
 
 type CustomEditorOptions struct {
 	Theme       string `json:"theme,omitempty"`
@@ -29,14 +32,28 @@ type CustomEditorOptions struct {
 	FontFamily  string `json:"font_family,omitempty"`
 }
 
+func (t *Tags) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		return json.Unmarshal(v, &t)
+	case string:
+		return json.Unmarshal([]byte(v), &t)
+	default:
+		return nil
+	}
+}
+
+func (t Tags) Value() (driver.Value, error) {
+	result, err := json.Marshal(t)
+	return string(result), err
+}
+
 func (pc *CustomEditorOptions) Scan(val interface{}) error {
 	switch v := val.(type) {
 	case []byte:
-		json.Unmarshal(v, &pc)
-		return nil
+		return json.Unmarshal(v, &pc)
 	case string:
-		json.Unmarshal([]byte(v), &pc)
-		return nil
+		return json.Unmarshal([]byte(v), &pc)
 	default:
 		return nil
 	}
@@ -46,7 +63,7 @@ func (pc CustomEditorOptions) Value() (driver.Value, error) {
 	return string(result), err
 }
 
-//TableName - returns table name in database
+//TableName - returns table name from database
 func (s Snippet) TableName() string {
 	return "snippets"
 }
@@ -61,15 +78,4 @@ func (s Snippet) IsPublic() bool {
 	} else {
 		return true
 	}
-}
-
-func (s *Snippet) Load(snippet Snippet) {
-	s.UserID = snippet.UserID
-	s.Favorite = snippet.Favorite
-	s.AccessLevel = snippet.AccessLevel
-	s.Title = snippet.Title
-	s.Content = snippet.Content
-	s.Language = snippet.Language
-	s.CustomEditorOptions = snippet.CustomEditorOptions
-	s.UpdatedAt = snippet.UpdatedAt
 }

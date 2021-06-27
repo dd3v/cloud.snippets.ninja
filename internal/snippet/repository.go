@@ -3,19 +3,18 @@ package snippet
 import (
 	"context"
 	"errors"
-
+	"fmt"
 	"github.com/dd3v/snippets.ninja/internal/entity"
 	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
 	"github.com/dd3v/snippets.ninja/pkg/query"
 	dbx "github.com/go-ozzo/ozzo-dbx"
+	"strings"
 )
-
 
 type repository struct {
 	db *dbcontext.DB
 }
 
-//NewMockRepository - ...
 func NewRepository(db *dbcontext.DB) Repository {
 	return repository{
 		db: db,
@@ -80,6 +79,19 @@ func (r repository) buildExpression(key string, value string) (dbx.Expression, e
 		break
 	case "title":
 		expression = dbx.NewExp("MATCH (title,content) AGAINST ({:keywords} IN BOOLEAN MODE)", dbx.Params{"keywords": value + "*"})
+		break
+	case "tags":
+		tags := strings.Split(value, ",")
+		conditions := []string{}
+		sql := ""
+		bindParams := dbx.Params{}
+		for index, tag := range tags {
+			bindKey := fmt.Sprintf("s_tag%d", index)
+			bindParams[bindKey] = tag
+			conditions = append(conditions, fmt.Sprintf("JSON_SEARCH(tags, 'one', {:%s})", bindKey))
+		}
+		sql = strings.Join(conditions, " OR ")
+		expression = dbx.NewExp(sql, bindParams)
 		break
 	default:
 		err = errors.New("Undefined filter key")

@@ -79,7 +79,7 @@ func NewService(JWTSigningKey string, repository Repository, logger log.Logger) 
 //3. Compare password hash
 //4.Generate token pair
 //5. Remove useless sessions from db by user id and user-agent
-//6.Create new fresh session
+//6.Upsert new fresh session
 func (s service) Login(ctx context.Context, credentials authCredentials) (entity.TokenPair, error) {
 	user, err := s.repository.GetUserByLoginOrEmail(ctx, credentials.User)
 	if err != nil {
