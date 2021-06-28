@@ -21,11 +21,12 @@ func NewHTTPHandler(router *routing.RouteGroup, jwtAuthHandler routing.Handler, 
 		service: service,
 	}
 	router.Use(jwtAuthHandler)
-	router.Get("/snippets/<id>", r.view)
+	router.Get("/snippets/<id:\\d+>", r.view)
 	router.Post("/snippets", r.create)
-	router.Put("/snippets/<id>", r.update)
-	router.Delete("/snippets/<id>", r.delete)
+	router.Put("/snippets/<id:\\d+>", r.update)
+	router.Delete("/snippets/<id:\\d+>", r.delete)
 	router.Get("/snippets", r.list)
+	router.Get("/snippets/tags", r.tags)
 }
 
 func (r resource) view(c *routing.Context) error {
@@ -148,4 +149,13 @@ func (r resource) list(c *routing.Context) error {
 		TotalItems: total,
 		TotalPages: (total + pagination.GetLimit() - 1) / pagination.GetLimit(),
 	})
+}
+
+func (r resource) tags(c *routing.Context) error {
+	identity := c.Request.Context().Value(entity.JWTCtxKey).(entity.Identity)
+	tags, err := r.service.GetTags(c.Request.Context(), identity.GetID())
+	if err != nil {
+		return err
+	}
+	return c.Write(tags)
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"github.com/dd3v/snippets.ninja/internal/entity"
 	"github.com/dd3v/snippets.ninja/internal/test"
+	"github.com/dd3v/snippets.ninja/pkg/log"
 	"net/http"
 	"testing"
 	"time"
@@ -128,7 +129,8 @@ func TestHTTP_Login(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		service := NewService("jwt_test_key", tc.repository)
+		logger, _ := log.NewForTests()
+		service := NewService("jwt_test_key", tc.repository, logger)
 		router := test.MockRouter()
 		NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
 		test.Endpoint(t, tc.name, router, tc.request)
@@ -268,7 +270,8 @@ func TestHTTP_RefreshToken(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		service := NewService("jwt_test_key", tc.repository)
+		logger, _ := log.NewForTests()
+		service := NewService("jwt_test_key", tc.repository, logger)
 		router := test.MockRouter()
 		NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
 		test.Endpoint(t, tc.name, router, tc.request)
@@ -316,7 +319,8 @@ func TestHTTP_Logout(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		service := NewService("jwt_test_key", tc.repository)
+		logger, _ := log.NewForTests()
+		service := NewService("jwt_test_key", tc.repository, logger)
 		router := test.MockRouter()
 		NewHTTPHandler(router.Group(""), test.MockAuthMiddleware, service)
 		test.Endpoint(t, tc.name, router, tc.request)

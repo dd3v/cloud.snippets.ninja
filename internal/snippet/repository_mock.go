@@ -17,6 +17,7 @@ type RepositoryMock struct {
 	UpdateFn        func(ctx context.Context, snippet entity.Snippet) error
 	DeleteFn        func(ctx context.Context, snippet entity.Snippet) error
 	CountByUserIDFn func(ctx context.Context, userID int, filter map[string]string) (int, error)
+	GetTagsFn       func(ctx context.Context, userID int) (entity.Tags, error)
 }
 
 func (r RepositoryMock) QueryByUserID(ctx context.Context, userID int, filter map[string]string, sort query.Sort, pagination query.Pagination) ([]entity.Snippet, error) {
@@ -41,4 +42,8 @@ func (r RepositoryMock) Delete(ctx context.Context, snippet entity.Snippet) erro
 
 func (r RepositoryMock) CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error) {
 	return r.CountByUserIDFn(ctx, userID, filter)
+}
+
+func (r RepositoryMock) GetTags(ctx context.Context, userID int) (entity.Tags, error) {
+	return r.GetTagsFn(ctx, userID)
 }

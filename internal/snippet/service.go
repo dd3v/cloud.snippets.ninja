@@ -13,6 +13,7 @@ type Service interface {
 	Create(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
 	Update(context context.Context, snippet entity.Snippet) (entity.Snippet, error)
 	Delete(context context.Context, id int) error
+	GetTags(ctx context.Context, userID int) (entity.Tags, error)
 	CountByUserID(context context.Context, userID int, filter map[string]string) (int, error)
 }
 
@@ -22,6 +23,7 @@ type Repository interface {
 	Create(ctx context.Context, snippet entity.Snippet) (entity.Snippet, error)
 	Update(ctx context.Context, snippet entity.Snippet) error
 	Delete(ctx context.Context, snippet entity.Snippet) error
+	GetTags(ctx context.Context, userID int) (entity.Tags, error)
 	CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error)
 }
 
@@ -93,4 +95,10 @@ func (s service) Delete(ctx context.Context, id int) error {
 
 func (s service) CountByUserID(ctx context.Context, userID int, filter map[string]string) (int, error) {
 	return s.repository.CountByUserID(ctx, userID, filter)
+}
+
+func (s service) GetTags(ctx context.Context, userID int) (entity.Tags, error) {
+
+
+	return s.repository.GetTags(ctx, 1)
 }

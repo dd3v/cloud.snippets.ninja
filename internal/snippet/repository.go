@@ -70,6 +70,17 @@ func (r repository) CountByUserID(ctx context.Context, userID int, filter map[st
 	return count, err
 }
 
+func (r repository) GetTags(ctx context.Context, userID int) (entity.Tags, error) {
+	tags := entity.Tags{}
+	q := r.db.With(ctx).NewQuery("SELECT DISTINCT user_tags " +
+		"FROM snippets, json_table(snippets.tags, '$[*]' columns (user_tags varchar(100) path '$')) r " +
+		"WHERE user_id = {:userID}").Bind(dbx.Params{
+		"userID": userID,
+	})
+	err := q.Column(&tags)
+	return tags, err
+}
+
 func (r repository) buildExpression(key string, value string) (dbx.Expression, error) {
 	var expression dbx.Expression
 	var err error

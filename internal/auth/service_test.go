@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"github.com/dd3v/snippets.ninja/internal/test"
+	"github.com/dd3v/snippets.ninja/pkg/log"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
@@ -35,12 +36,12 @@ func TestAuthService_Login(t *testing.T) {
 			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, login string) (entity.User, error) {
 					return entity.User{
-						ID:           1,
-						PasswordHash: "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
-						Login:        "test",
-						Email:        "",
-						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2021),
+						ID:        1,
+						Password:  "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
+						Login:     "test",
+						Email:     "",
+						CreatedAt: test.Time(2020),
+						UpdatedAt: test.Time(2021),
 					}, nil
 				},
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
@@ -66,12 +67,12 @@ func TestAuthService_Login(t *testing.T) {
 			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, login string) (entity.User, error) {
 					return entity.User{
-						ID:           0,
-						PasswordHash: "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
-						Login:        "test",
-						Email:        "",
-						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2021),
+						ID:        0,
+						Password:  "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
+						Login:     "test",
+						Email:     "",
+						CreatedAt: test.Time(2020),
+						UpdatedAt: test.Time(2021),
 					}, nil
 				},
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
@@ -115,12 +116,12 @@ func TestAuthService_Login(t *testing.T) {
 			repository: RepositoryMock{
 				GetUserByLoginOrEmailFn: func(ctx context.Context, login string) (entity.User, error) {
 					return entity.User{
-						ID:           1,
-						PasswordHash: "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
-						Login:        "test",
-						Email:        "",
-						CreatedAt:    test.Time(2020),
-						UpdatedAt:    test.Time(2021),
+						ID:        1,
+						Password:  "$2a$10$ubN1SU6RUOjlbQiHObqy7.bgK08Gl/YNWxTSrqhkTsvtnsh1nFzDO",
+						Login:     "test",
+						Email:     "",
+						CreatedAt: test.Time(2020),
+						UpdatedAt: test.Time(2021),
 					}, nil
 				},
 				CreateSessionFn: func(ctx context.Context, session entity.Session) error {
@@ -137,7 +138,8 @@ func TestAuthService_Login(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			service := NewService("jwt_test_key", tc.repository)
+			logger, _ := log.NewForTests()
+			service := NewService("jwt_test_key", tc.repository, logger)
 			tokenPair, err := service.Login(context.Background(), tc.args.auth)
 			assert.Equal(t, tc.wantData, tokenPair.AccessToken != "")
 			assert.Equal(t, tc.wantData, tokenPair.RefreshToken != "")
@@ -287,7 +289,8 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			service := NewService("jwt_test_key", tc.repository)
+			logger, _ := log.NewForTests()
+			service := NewService("jwt_test_key", tc.repository, logger)
 			token, err := service.Refresh(context.Background(), tc.args.refreshCredentials)
 			assert.Equal(t, tc.wantData, token.AccessToken != "")
 			assert.Equal(t, tc.wantData, token.RefreshToken != "")
@@ -335,7 +338,8 @@ func TestAuthService_Logout(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			service := NewService("jwt_test", tc.repository)
+			logger, _ := log.NewForTests()
+			service := NewService("jwt_test", tc.repository, logger)
 			err := service.Logout(context.Background(), tc.args.refreshToken)
 			assert.Equal(t, tc.wantErr, err)
 		})

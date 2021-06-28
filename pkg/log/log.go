@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"go.uber.org/zap/zaptest/observer"
 	"net/http"
 )
 
@@ -36,6 +38,12 @@ func New(outputPaths []string) Logger {
 	z, _ := config.Build()
 
 	return &logger{z.Sugar()}
+}
+
+func NewForTests() (Logger, *observer.ObservedLogs) {
+	core, recorded := observer.New(zapcore.InfoLevel)
+	z := zap.New(core)
+	return &logger{z.Sugar()}, recorded
 }
 
 func (l logger) With(ctx context.Context, args ...interface{}) Logger {
