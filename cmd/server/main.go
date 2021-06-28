@@ -26,6 +26,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
+var Version = "1.0 beta"
+
 var (
 	configPath string
 )
@@ -78,6 +80,9 @@ func main() {
 		errors.Handler(),
 	)
 	apiGroup := router.Group("/api")
+	apiGroup.Get("/version", func(c *routing.Context) error {
+		return c.Write(Version)
+	})
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
 	user.NewHTTPHandler(apiGroup.Group("/v1"), jwtAuthMiddleware, userService)
