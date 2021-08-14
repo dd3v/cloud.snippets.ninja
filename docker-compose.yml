@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - /tmp:/var/log/app
+    environment:
+      - APP_ENV=prod
+    ports:
+      - "8888:8888"
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    restart: always
+    container_name: db
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./data/mysql:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: snippets
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 5s
+      retries: 5

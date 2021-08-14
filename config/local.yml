@@ -1,0 +1,5 @@
+bind_addr: "8888"
+database_dns: "root:root@tcp(127.0.0.1:3306)/snippets"
+test_database_dns: "root:root@tcp(127.0.0.1:3306)/snippets_test?parseTime=true"
+migration_db_dns: "mysql://root:root@tcp(127.0.0.1:3306)/snippets"
+jwt_signing_key: "3eo2aslQWk32mAxaQwk3As"

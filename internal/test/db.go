@@ -1,14 +1,13 @@
 package test
 
 import (
+	"os"
 	"testing"
 
-	"github.com/BurntSushi/toml"
 	"github.com/dd3v/snippets.ninja/internal/config"
 	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/go-sql-driver/mysql"
-
 )
 
 var db *dbcontext.DB
@@ -18,13 +17,12 @@ func Database(t *testing.T) *dbcontext.DB {
 	if db != nil {
 		return db
 	}
-	config := config.NewConfig()
-	_, err := toml.DecodeFile("../../config/app.toml", config)
+	cfg, err := config.Load("../../cfg/local.yml")
 	if err != nil {
-		t.Error(err)
-		t.FailNow()
+		t.Errorf("failed to load application configuration: %s", err)
+		os.Exit(-1)
 	}
-	mysql, err := dbx.MustOpen("mysql", config.TestDatabaseDNS)
+	mysql, err := dbx.MustOpen("mysql", cfg.TestDatabaseDNS)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()

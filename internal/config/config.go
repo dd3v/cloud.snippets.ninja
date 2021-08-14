@@ -1,18 +1,25 @@
 package config
 
+import (
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
+)
+
 //Config basic data structure for application configuration
 type Config struct {
-	BindAddr        string `toml:"bind_addr"`
-	LogLevel        string `toml:"log_level"`
-	DatabaseDNS     string `toml:"database_dns"`
-	TestDatabaseDNS string `toml:"test_database_dns"`
-	JWTSigningKey   string `toml:"jwt_signing_key"`
+	BindAddr        string `yaml:"bind_addr"`
+	LogLevel        string `yaml:"log_level"`
+	DatabaseDNS     string `yaml:"database_dns"`
+	TestDatabaseDNS string `yaml:"test_database_dns"`
+	JWTSigningKey   string `yaml:"jwt_signing_key"`
 }
 
-//NewConfig creates config structure and fills values by default
-func NewConfig() *Config {
-	return &Config{
-		BindAddr: "8080",
-		LogLevel: "debug",
+func Load(path string) (*Config, error) {
+	config := &Config{}
+	file, err := ioutil.ReadFile(path)
+	if err != nil {
+		return config, err
 	}
+	err = yaml.Unmarshal(file, &config)
+	return config, err
 }

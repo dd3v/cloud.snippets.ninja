@@ -5,25 +5,22 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/dd3v/snippets.ninja/internal/rbac"
-	"github.com/dd3v/snippets.ninja/pkg/accesslog"
-	"github.com/dd3v/snippets.ninja/pkg/log"
-	"net/http"
-	"os"
-	"time"
-
-	"github.com/BurntSushi/toml"
-	routing "github.com/go-ozzo/ozzo-routing/v2"
-	"github.com/go-ozzo/ozzo-routing/v2/content"
-
 	"github.com/dd3v/snippets.ninja/internal/auth"
 	"github.com/dd3v/snippets.ninja/internal/config"
 	"github.com/dd3v/snippets.ninja/internal/errors"
+	"github.com/dd3v/snippets.ninja/internal/rbac"
 	"github.com/dd3v/snippets.ninja/internal/snippet"
 	"github.com/dd3v/snippets.ninja/internal/user"
+	"github.com/dd3v/snippets.ninja/pkg/accesslog"
 	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
+	"github.com/dd3v/snippets.ninja/pkg/log"
 	dbx "github.com/go-ozzo/ozzo-dbx"
+	routing "github.com/go-ozzo/ozzo-routing/v2"
+	"github.com/go-ozzo/ozzo-routing/v2/content"
 	_ "github.com/go-sql-driver/mysql"
+	"net/http"
+	"os"
+	"time"
 )
 
 var Version = "1.0 beta"
@@ -33,21 +30,23 @@ var (
 )
 
 func init() {
-	flag.StringVar(&configPath, "config-path", "../../config/app.toml", "path to config file")
+	flag.StringVar(&configPath, "config", "../../config/local.yml", "path to config file")
 }
 
 func main() {
-	cfg := config.NewConfig()
-	_, err := toml.DecodeFile(configPath, cfg)
+	flag.Parse()
 	logger := log.New([]string{
 		"stdout",
 	})
+	cfg, err := config.Load(configPath)
+	logger.Infof("Config path: %s", configPath)
 	if err != nil {
-		logger.Error(err)
+		logger.Errorf("failed to load application configuration: %s", err)
 		os.Exit(-1)
 	}
 	mysql, err := dbx.MustOpen("mysql", cfg.DatabaseDNS)
 	if err != nil {
+		logger.Info(cfg.DatabaseDNS)
 		logger.Errorf("DB connection error %v", err)
 	}
 	mysql.ExecLogFunc = func(ctx context.Context, t time.Duration, sql string, result sql.Result, err error) {
