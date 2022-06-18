@@ -1,9 +1,8 @@
-module github.com/dd3v/snippets.ninja
+module github.com/dd3v/cloud.snippets.ninja
 
 go 1.13
 
 require (
-	github.com/BurntSushi/toml v0.3.1
 	github.com/asaskevich/govalidator v0.0.0-20200907205600-7a23bdc65eef // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-ozzo/ozzo-dbx v1.5.0
