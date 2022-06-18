@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/internal/test"
-	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/test"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/dbcontext"
 	"github.com/stretchr/testify/assert"
 )
 

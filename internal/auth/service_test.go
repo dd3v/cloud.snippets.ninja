@@ -2,13 +2,13 @@ package auth
 
 import (
 	"context"
-	"github.com/dd3v/snippets.ninja/internal/test"
-	"github.com/dd3v/snippets.ninja/pkg/log"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 
-	"github.com/dd3v/snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/test"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/log"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthService_Login(t *testing.T) {

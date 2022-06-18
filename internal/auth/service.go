@@ -4,13 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/dd3v/snippets.ninja/pkg/log"
+
+	"github.com/dd3v/cloud.snippets.ninja/pkg/log"
 
 	"time"
 
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/internal/errors"
-	"github.com/dd3v/snippets.ninja/pkg/security"
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/errors"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/security"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/google/uuid"
 )

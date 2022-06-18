@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/internal/errors"
-	"github.com/dd3v/snippets.ninja/pkg/query"
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/errors"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/query"
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 )
 

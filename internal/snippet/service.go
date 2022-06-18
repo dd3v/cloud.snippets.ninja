@@ -3,8 +3,8 @@ package snippet
 import (
 	"context"
 
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/pkg/query"
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/query"
 )
 
 type Service interface {
@@ -98,7 +98,6 @@ func (s service) CountByUserID(ctx context.Context, userID int, filter map[strin
 }
 
 func (s service) GetTags(ctx context.Context, userID int) (entity.Tags, error) {
-
 
 	return s.repository.GetTags(ctx, 1)
 }

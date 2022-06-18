@@ -3,12 +3,13 @@ package auth
 import (
 	"context"
 	"database/sql"
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/internal/test"
-	"github.com/dd3v/snippets.ninja/pkg/log"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/test"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/log"
 )
 
 func TestHTTP_Login(t *testing.T) {

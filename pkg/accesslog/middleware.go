@@ -1,11 +1,12 @@
 package accesslog
 
 import (
-	"github.com/dd3v/snippets.ninja/pkg/log"
-	routing "github.com/go-ozzo/ozzo-routing/v2"
-	"github.com/go-ozzo/ozzo-routing/v2/access"
 	"net/http"
 	"time"
+
+	"github.com/dd3v/cloud.snippets.ninja/pkg/log"
+	routing "github.com/go-ozzo/ozzo-routing/v2"
+	"github.com/go-ozzo/ozzo-routing/v2/access"
 )
 
 func Handler(logger log.Logger) routing.Handler {

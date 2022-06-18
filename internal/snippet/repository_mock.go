@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/pkg/query"
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/query"
 )
 
 var repositoryMockErr = errors.New("error repository")

@@ -2,10 +2,11 @@ package user
 
 import (
 	"context"
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/internal/test"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/test"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestService_GetByID(t *testing.T) {

@@ -3,7 +3,8 @@ package auth
 import (
 	"context"
 	"errors"
-	"github.com/dd3v/snippets.ninja/internal/entity"
+
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
 )
 
 var repositoryMockErr = errors.New("error repository")

@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
-	"github.com/dd3v/snippets.ninja/pkg/query"
-	dbx "github.com/go-ozzo/ozzo-dbx"
 	"strings"
+
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/dbcontext"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/query"
+	dbx "github.com/go-ozzo/ozzo-dbx"
 )
 
 type repository struct {

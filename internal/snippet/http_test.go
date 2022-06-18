@@ -3,12 +3,13 @@ package snippet
 import (
 	"context"
 	"database/sql"
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/internal/rbac"
-	"github.com/dd3v/snippets.ninja/internal/test"
-	"github.com/dd3v/snippets.ninja/pkg/query"
 	"net/http"
 	"testing"
+
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/internal/rbac"
+	"github.com/dd3v/cloud.snippets.ninja/internal/test"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/query"
 )
 
 func TestHTTP_View(t *testing.T) {

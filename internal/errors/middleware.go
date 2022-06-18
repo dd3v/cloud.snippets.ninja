@@ -3,9 +3,10 @@ package errors
 import (
 	"database/sql"
 	"errors"
-	"github.com/dd3v/snippets.ninja/internal/rbac"
 	"log"
 	"net/http"
+
+	"github.com/dd3v/cloud.snippets.ninja/internal/rbac"
 
 	routing "github.com/go-ozzo/ozzo-routing/v2"
 	validation "github.com/go-ozzo/ozzo-validation"

@@ -4,8 +4,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/dd3v/snippets.ninja/internal/config"
-	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
+	"github.com/dd3v/cloud.snippets.ninja/internal/config"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/dbcontext"
 	dbx "github.com/go-ozzo/ozzo-dbx"
 	_ "github.com/go-sql-driver/mysql"
 )

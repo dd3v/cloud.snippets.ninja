@@ -2,10 +2,11 @@ package user
 
 import (
 	"context"
+
 	dbx "github.com/go-ozzo/ozzo-dbx"
 
-	"github.com/dd3v/snippets.ninja/internal/entity"
-	"github.com/dd3v/snippets.ninja/pkg/dbcontext"
+	"github.com/dd3v/cloud.snippets.ninja/internal/entity"
+	"github.com/dd3v/cloud.snippets.ninja/pkg/dbcontext"
 )
 
 type repository struct {
